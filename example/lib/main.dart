@@ -1,60 +1,81 @@
+import 'package:example/graph_screen/blood_pressure_graph_screen.dart';
+import 'package:example/graph_screen/grip_strength_graph_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:hc_flutter_graph/blood_pressure_chart.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  MyApp({super.key});
-
-  // This widget is the root of your application.
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final List<BloodPressureData> data = [
-      BloodPressureData(
-        date: "24.12.01",
-        systolic: 122,
-        diastolic: 71,
-        heartRate: 90,
-      ),
-      BloodPressureData(
-        date: "24.12.01",
-        systolic: 100,
-        diastolic: 70,
-        heartRate: 72,
-      ),
-      BloodPressureData(
-        date: "24.12.01",
-        systolic: 140,
-        diastolic: 90,
-        heartRate: 115,
-      ),
-      BloodPressureData(
-        date: "24.12.01",
-        systolic: 120,
-        diastolic: 100,
-        heartRate: 110,
-      ),
-      BloodPressureData(
-        date: "24.12.01",
-        systolic: 140,
-        diastolic: 100,
-        heartRate: 130,
-      ),
-    ];
-
     return MaterialApp(
-      title: '혈압 차트',
+      title: '차트 예제',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
-      home: Scaffold(
-        body: Padding(
-          padding: const EdgeInsets.all(50),
-          child: BloodPressureChart(data: data),
+      home: const HomeScreen(),
+    );
+  }
+}
+
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('차트 예제'),
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 40,
+                  vertical: 15,
+                ),
+                textStyle: const TextStyle(fontSize: 18),
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const BloodPressureScreen(),
+                  ),
+                );
+              },
+              child: const Text('혈압 그래프'),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 40,
+                  vertical: 15,
+                ),
+                textStyle: const TextStyle(fontSize: 18),
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => GripStrengthExample(),
+                  ),
+                );
+              },
+              child: const Text('악력 그래프'),
+            ),
+          ],
         ),
       ),
     );
