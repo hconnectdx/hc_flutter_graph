@@ -11,7 +11,7 @@ class BloodPressureRangeScreen extends StatefulWidget {
 
 class _BloodPressureRangeScreenState extends State<BloodPressureRangeScreen> {
   // 현재 혈압 값 (실제 앱에서는 사용자 데이터에서 가져올 수 있음)
-  double _currentValue = 125.0;
+  double _currentValue = 120.0;
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +65,7 @@ class _BloodPressureRangeScreenState extends State<BloodPressureRangeScreen> {
         ),
         Slider(
           value: _currentValue,
-          min: 60,
+          min: 0,
           max: 200,
           divisions: 140,
           activeColor: _getColorForValue(_currentValue),
