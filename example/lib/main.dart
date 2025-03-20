@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hc_graph/blood_pressure_chart.dart';
+import 'package:hc_flutter_graph/blood_pressure_chart.dart';
 
 void main() {
   runApp(MyApp());

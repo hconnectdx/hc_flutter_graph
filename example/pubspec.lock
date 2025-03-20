@@ -75,7 +75,7 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  hc_graph:
+  hc_flutter_graph:
     dependency: "direct main"
     description:
       path: ".."
