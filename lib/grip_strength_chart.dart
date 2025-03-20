@@ -4,12 +4,14 @@ class GripStrengthChart extends StatefulWidget {
   final List<GripStrengthData> data;
   final double spacingFactor;
   final String legendLabel;
+  final String chartTitle;
 
   const GripStrengthChart({
     super.key,
     required this.data,
     this.spacingFactor = 0.85,
     this.legendLabel = "레전드를 입력하세요",
+    this.chartTitle = "타이틀을 입력하세요",
   });
 
   @override
@@ -25,6 +27,18 @@ class _GripStrengthChartState extends State<GripStrengthChart> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (widget.chartTitle.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(left: 16.0, bottom: 8.0),
+            child: Text(
+              widget.chartTitle,
+              style: const TextStyle(
+                fontSize: 42,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+          ),
         Expanded(
           child: CustomPaint(
             size: const Size(double.infinity, 300),
@@ -371,16 +385,17 @@ class GripStrengthChartPainter extends CustomPainter {
     );
     final textPainter = TextPainter(textDirection: TextDirection.ltr);
 
-    final rectPaint =
-        Paint()
-          ..color = Colors.blue
-          ..style = PaintingStyle.fill;
-
     for (int i = 0; i < data.length; i++) {
       final x = startX + i * pointSpacing;
       final normalizedValue = (data[i].strength - minValue) / valueRange;
       final y =
           size.height * (1 - normalizedValue); // Scale to 100% of chart height
+
+      // 가장 오른쪽(마지막) 데이터 포인트일 경우 빨간색으로, 그 외에는 파란색으로 설정
+      final rectPaint =
+          Paint()
+            ..color = (i == data.length - 1) ? Colors.red : Colors.blue
+            ..style = PaintingStyle.fill;
 
       // 직사각형 그리기 (더 아래로 이동: y-40에서 y-25로 변경)
       final rect = RRect.fromRectAndRadius(
