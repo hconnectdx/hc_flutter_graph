@@ -47,7 +47,14 @@ class BloodPressureScreen extends StatelessWidget {
       ),
       body: Padding(
         padding: const EdgeInsets.all(20),
-        child: BloodPressureChart(data: data),
+        child: Column(
+          children: [
+            BloodPressureChart(
+              data: data,
+              height: MediaQuery.of(context).size.height * 0.6,
+            ),
+          ],
+        ),
       ),
     );
   }

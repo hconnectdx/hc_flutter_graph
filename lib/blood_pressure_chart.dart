@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 class BloodPressureChart extends StatelessWidget {
   final List<BloodPressureData> data;
   final double spacingFactor;
+  final double height;
 
   const BloodPressureChart({
     super.key,
     required this.data,
     this.spacingFactor = 0.85,
+    this.height = 300,
   });
 
   @override
@@ -15,9 +17,10 @@ class BloodPressureChart extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
+        SizedBox(
+          height: height, // 매개변수로 전달된 높이 사용
+          width: double.infinity,
           child: CustomPaint(
-            size: const Size(double.infinity, 300),
             painter: BloodPressureChartPainter(
               data,
               showGridValues: false,

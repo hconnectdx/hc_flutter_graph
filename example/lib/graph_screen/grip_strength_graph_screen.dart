@@ -7,10 +7,10 @@ class GripStrengthExample extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final List<GripStrengthData> data = [
-      GripStrengthData(date: "24.12.01", strength: 35),
+      GripStrengthData(date: "24.12.01", strength: 15),
       GripStrengthData(date: "24.12.01", strength: 35.4),
-      GripStrengthData(date: "24.12.01", strength: 30),
-      GripStrengthData(date: "24.12.01", strength: 32),
+      GripStrengthData(date: "24.12.01", strength: 21),
+      GripStrengthData(date: "24.12.01", strength: 42),
       GripStrengthData(date: "24.12.01", strength: 35),
     ];
 
