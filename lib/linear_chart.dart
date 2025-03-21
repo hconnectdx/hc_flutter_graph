@@ -1,24 +1,26 @@
 import 'package:flutter/material.dart';
 
-class GripStrengthChart extends StatefulWidget {
-  final List<GripStrengthData> data;
+class LinearChart extends StatefulWidget {
+  final List<LinearChartData> data;
   final double spacingFactor;
   final String legendLabel;
   final String chartTitle;
+  final double height;
 
-  const GripStrengthChart({
+  const LinearChart({
     super.key,
     required this.data,
     this.spacingFactor = 0.85,
     this.legendLabel = "레전드를 입력하세요",
     this.chartTitle = "타이틀을 입력하세요",
+    this.height = 300,
   });
 
   @override
-  State<GripStrengthChart> createState() => _GripStrengthChartState();
+  State<LinearChart> createState() => _LinearChartState();
 }
 
-class _GripStrengthChartState extends State<GripStrengthChart> {
+class _LinearChartState extends State<LinearChart> {
   bool _showMyStrength = true;
   bool _showAverageStrength = true;
 
@@ -39,9 +41,10 @@ class _GripStrengthChartState extends State<GripStrengthChart> {
               ),
             ),
           ),
-        Expanded(
+        SizedBox(
+          height: widget.height,
+          width: double.infinity,
           child: CustomPaint(
-            size: const Size(double.infinity, 300),
             painter: GripStrengthChartPainter(
               widget.data,
               showGridValues: false,
@@ -85,7 +88,7 @@ class _GripStrengthChartState extends State<GripStrengthChart> {
 }
 
 class GripStrengthChartPainter extends CustomPainter {
-  final List<GripStrengthData> data;
+  final List<LinearChartData> data;
   final bool showGridValues;
   final double spacingFactor;
   final bool showMyStrength;
@@ -447,9 +450,9 @@ class GripStrengthChartPainter extends CustomPainter {
   }
 }
 
-class GripStrengthData {
+class LinearChartData {
   final String date;
   final double strength;
 
-  GripStrengthData({required this.date, required this.strength});
+  LinearChartData({required this.date, required this.strength});
 }

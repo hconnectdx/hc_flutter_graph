@@ -34,13 +34,11 @@ class _BloodPressureRangeScreenState extends State<BloodPressureRangeScreen> {
               const SizedBox(height: 20),
 
               // 혈압 범위 차트
-              Expanded(
-                child: BloodPressureRangeChart(
-                  chartTitle: '혈압(mmHg)',
-                  ranges: PressureRange.getSampleRanges(),
-                  currentValue: _currentValue,
-                  currentValueLabel: '나의 건강상태',
-                ),
+              BloodPressureRangeChart(
+                chartTitle: '혈압(mmHg)',
+                ranges: PressureRange.getSampleRanges(),
+                currentValue: _currentValue,
+                currentValueLabel: '나의 건강상태',
               ),
 
               const SizedBox(height: 20),

@@ -1,7 +1,7 @@
 import 'package:example/graph_screen/blood_pressure_graph_screen.dart';
 import 'package:example/graph_screen/blood_pressure_range_screen.dart';
 import 'package:example/graph_screen/gauge_chart_screen.dart';
-import 'package:example/graph_screen/grip_strength_graph_screen.dart';
+import 'package:example/graph_screen/linear_chart_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:hc_flutter_graph/blood_pressure_chart.dart';
 
