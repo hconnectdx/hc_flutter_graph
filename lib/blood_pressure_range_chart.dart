@@ -258,6 +258,66 @@ class BloodPressureRangePainter extends CustomPainter {
       return startY - (ratioInRange * (startY - endY));
     }
 
+    // X값을 픽셀 위치로 매핑하는 함수 추가 (비율 기반)
+    double mapXValueToPixel(
+      double xValue,
+      double chartLeft,
+      double chartWidth,
+    ) {
+      // X축 범위 비율 정의 (저혈압:정상:주의혈압:고혈압 전단계:제1기 고혈압:제2기 고혈압 = 4:1:1:1:1:1)
+      final List<int> xRatios = [4, 1, 1, 1, 1, 1]; // 각 구간의 상대적 너비 비율
+      final int totalRatio = xRatios.reduce((a, b) => a + b); // 총 비율 합계 (9)
+
+      // ranges를 maxValue 기준으로 정렬
+      final sortedRanges = List<PressureRange>.from(ranges)
+        ..sort((a, b) => a.maxValue.compareTo(b.maxValue));
+
+      // 각 구간의 경계값 (maxValue) 추출
+      final List<double> boundaries =
+          sortedRanges.map((r) => r.maxValue).toList();
+
+      // 최소값이 0이 아닌 경우 추가
+      final double minXValue = sortedRanges
+          .map((r) => r.minValue)
+          .reduce((a, b) => a < b ? a : b);
+      if (!boundaries.contains(minXValue)) {
+        boundaries.insert(0, minXValue);
+      }
+
+      // 경계값 처리
+      if (xValue <= boundaries.first) return chartLeft;
+      if (xValue >= boundaries.last) return chartLeft + chartWidth;
+
+      // 해당 값이 속한 구간 찾기
+      int rangeIndex = 0;
+      for (int i = 0; i < boundaries.length - 1; i++) {
+        if (xValue >= boundaries[i] && xValue <= boundaries[i + 1]) {
+          rangeIndex = i;
+          break;
+        }
+      }
+
+      // 각 구간의 너비 계산
+      final List<double> segmentWidths = [];
+      for (int i = 0; i < xRatios.length; i++) {
+        segmentWidths.add((xRatios[i] / totalRatio) * chartWidth);
+      }
+
+      // 구간 시작 위치 계산
+      double startX = chartLeft;
+      for (int i = 0; i < rangeIndex; i++) {
+        startX += segmentWidths[i];
+      }
+
+      // 구간 내에서의 비율 계산 (0~1 사이 값)
+      double rangeStart = boundaries[rangeIndex];
+      double rangeEnd = boundaries[rangeIndex + 1];
+      double ratioInRange = (xValue - rangeStart) / (rangeEnd - rangeStart);
+
+      // 픽셀 위치 계산
+      return startX + (ratioInRange * segmentWidths[rangeIndex]);
+    }
+
     // y축 범위 계산 - PressureRange의 yValue에서 계산
     double minYValue = 40.0; // 항상 40으로 고정
     double maxYValue = 0.0;
@@ -328,11 +388,12 @@ class BloodPressureRangePainter extends CustomPainter {
     for (int i = 0; i < sortedRanges.length; i++) {
       final range = sortedRanges[i];
 
-      // 범위의 상대적 위치 계산 (X축)
-      final double rangeEnd = (range.maxValue - minXValue) / xValueRange;
-
-      // 범위의 픽셀 위치 계산 (X축)
-      final double rangeEndX = chartLeft + (rangeEnd * chartWidth);
+      // 범위의 픽셀 위치 계산 (X축) - 수정된 매핑 함수 사용
+      final double rangeEndX = mapXValueToPixel(
+        range.maxValue,
+        chartLeft,
+        chartWidth,
+      );
       final double rangeWidth = rangeEndX - chartLeft;
 
       // Y값을 기준으로 높이 계산 (Y축) - 수정된 매핑 함수 사용
@@ -393,9 +454,12 @@ class BloodPressureRangePainter extends CustomPainter {
       heightPerRange,
     );
 
-    // 현재 값 표시 - X축 위치 계산
-    final double currentX =
-        chartLeft + (((pointerXValue - minXValue) / xValueRange) * chartWidth);
+    // 현재 값 표시 - X축 위치 계산 - 수정된 매핑 함수 사용
+    final double currentX = mapXValueToPixel(
+      pointerXValue,
+      chartLeft,
+      chartWidth,
+    );
 
     // Y축 슬라이더 값에 따른 Y축 위치 계산 - 수정된 매핑 함수 사용
     final double circleCenterY = _mapYValueToPixel(yAxisValue);
@@ -535,33 +599,6 @@ class BloodPressureRangePainter extends CustomPainter {
         color: Colors.white,
         fontWeight: FontWeight.bold,
         alignment: Alignment.centerLeft,
-      );
-    }
-  }
-
-  // 하단 값들 그리기
-  void _drawBottomValues(
-    Canvas canvas,
-    double chartLeft,
-    double chartRight,
-    double chartBottom,
-    double chartWidth,
-    double maxXValue,
-  ) {
-    final List<int> values = [40, 80, 120, 160, 200];
-    final double minXValue = 40.0;
-    final double xValueRange = maxXValue - minXValue;
-
-    for (int value in values) {
-      final double x =
-          chartLeft + ((value - minXValue) / xValueRange) * chartWidth;
-
-      _drawText(
-        canvas: canvas,
-        text: value.toString(),
-        position: Offset(x, chartBottom + 80),
-        fontSize: 25,
-        color: Colors.grey,
       );
     }
   }
@@ -767,14 +804,23 @@ class BloodPressureRangePainter extends CustomPainter {
     }
 
     // 지정된 값들을 사용
-    for (double value in rangeValues) {
+    for (int i = 0; i < rangeValues.length; i++) {
+      double value = rangeValues[i];
+
+      // 0 값은 표시하지 않음
+      if (value == 0) continue;
+
       // 값의 상대적 위치 계산 - 수정된 매핑 함수 사용
       final double y = mapYValueToPixel(value) - 20; // 텍스트 위치 조정을 위한 오프셋
+
+      // 가장 높은 값(마지막 값)인 경우 "최저"로 표시
+      String displayText =
+          (i == rangeValues.length - 1) ? "최저" : value.toInt().toString();
 
       // 텍스트와 그래프 사이 간격을 충분히 확보하고, 좌측 여백 제거
       _drawText(
         canvas: canvas,
-        text: value.toInt().toString(),
+        text: displayText,
         position: Offset(15, y),
         fontSize: 30,
         color: Colors.grey,
@@ -793,25 +839,108 @@ class BloodPressureRangePainter extends CustomPainter {
     double minXValue,
     double maxXValue,
   ) {
-    final int steps = 6; // 6단계로 나누기
-    final double stepValue = (maxXValue - minXValue) / (steps - 1);
+    // X값을 픽셀 위치로 매핑하는 함수 추가 - 외부 함수에 접근하기 위한 클로저
+    double mapXValueToPixel(
+      double xValue,
+      double chartLeft,
+      double chartWidth,
+    ) {
+      // X축 범위 비율 정의 (저혈압:정상:주의혈압:고혈압 전단계:제1기 고혈압:제2기 고혈압 = 4:1:1:1:1:1)
+      final List<int> xRatios = [4, 1, 1, 1, 1, 1]; // 각 구간의 상대적 너비 비율
+      final int totalRatio = xRatios.reduce((a, b) => a + b); // 총 비율 합계 (9)
 
-    final List<double> values = [];
-    for (int i = 0; i < steps; i++) {
-      values.add(minXValue + (stepValue * i));
+      // ranges를 maxValue 기준으로 정렬
+      final sortedRanges = List<PressureRange>.from(ranges)
+        ..sort((a, b) => a.maxValue.compareTo(b.maxValue));
+
+      // 각 구간의 경계값 (maxValue) 추출
+      final List<double> boundaries =
+          sortedRanges.map((r) => r.maxValue).toList();
+
+      // 최소값이 0이 아닌 경우 추가
+      final double minXValue = sortedRanges
+          .map((r) => r.minValue)
+          .reduce((a, b) => a < b ? a : b);
+      if (!boundaries.contains(minXValue)) {
+        boundaries.insert(0, minXValue);
+      }
+
+      // 경계값 처리
+      if (xValue <= boundaries.first) return chartLeft;
+      if (xValue >= boundaries.last) return chartLeft + chartWidth;
+
+      // 해당 값이 속한 구간 찾기
+      int rangeIndex = 0;
+      for (int i = 0; i < boundaries.length - 1; i++) {
+        if (xValue >= boundaries[i] && xValue <= boundaries[i + 1]) {
+          rangeIndex = i;
+          break;
+        }
+      }
+
+      // 각 구간의 너비 계산
+      final List<double> segmentWidths = [];
+      for (int i = 0; i < xRatios.length; i++) {
+        segmentWidths.add((xRatios[i] / totalRatio) * chartWidth);
+      }
+
+      // 구간 시작 위치 계산
+      double startX = chartLeft;
+      for (int i = 0; i < rangeIndex; i++) {
+        startX += segmentWidths[i];
+      }
+
+      // 구간 내에서의 비율 계산 (0~1 사이 값)
+      double rangeStart = boundaries[rangeIndex];
+      double rangeEnd = boundaries[rangeIndex + 1];
+      double ratioInRange = (xValue - rangeStart) / (rangeEnd - rangeStart);
+
+      // 픽셀 위치 계산
+      return startX + (ratioInRange * segmentWidths[rangeIndex]);
     }
 
-    for (double value in values) {
-      final double x =
-          chartLeft +
-          ((value - minXValue) / (maxXValue - minXValue)) * chartWidth;
+    // 범위 maxValue 값들을 X축에 표시
+    // 1. maxValue 값들을 정렬하고 중복 제거
+    final List<double> xValues = [];
+
+    // 범위 maxValue 정렬
+    List<PressureRange> sortedRanges = [...ranges];
+    sortedRanges.sort((a, b) => a.maxValue.compareTo(b.maxValue));
+
+    // 중복 없는 maxValue 값들 수집
+    for (final range in sortedRanges) {
+      if (!xValues.contains(range.maxValue)) {
+        xValues.add(range.maxValue);
+      }
+    }
+
+    // 최소값이 존재하지 않으면 추가
+    if (xValues.isEmpty || xValues.first > minXValue) {
+      xValues.insert(0, minXValue);
+    }
+
+    // 각 값에 대해 라벨 그리기
+    for (int i = 0; i < xValues.length; i++) {
+      double xValue = xValues[i];
+
+      // 0 값은 표시하지 않음
+      if (xValue == 0) continue;
+
+      // 비례 좌표 계산에 수정된 매핑 함수 사용
+      final double xPos = mapXValueToPixel(xValue, chartLeft, chartWidth);
+
+      // 최대값(마지막 값)인 경우 "최대"로 표시
+      String displayText =
+          (i == xValues.length - 1) ? "최대" : xValue.toStringAsFixed(0);
 
       _drawText(
         canvas: canvas,
-        text: value.toInt().toString(),
-        position: Offset(x, chartBottom + 35),
+        text: displayText,
+        position: Offset(xPos, chartBottom + 30),
         fontSize: 30,
-        color: Colors.grey,
+        color: const Color(0xFF999999),
+        fontWeight: FontWeight.normal,
+        alignment: Alignment.center,
       );
     }
   }
@@ -849,44 +978,44 @@ class PressureRange {
       PressureRange(
         minValue: 0,
         maxValue: 200,
+        yValue: 120,
         label: '제2기 고혈압',
         color: const Color(0xFFF44336), // 빨간색
-        yValue: 120, // Y축 값 추가
       ),
       PressureRange(
         minValue: 0,
-        maxValue: 180,
+        maxValue: 160,
         label: '제1기 고혈압',
         color: const Color(0xFFFF9800), // 주황색
         yValue: 100, // Y축 값 추가
       ),
       PressureRange(
         minValue: 0,
-        maxValue: 160,
+        maxValue: 140,
+        yValue: 90,
         label: '고혈압 전단계',
         color: const Color(0xFFFFEB3B), // 노란색
-        yValue: 90, // Y축 값 추가
       ),
       PressureRange(
         minValue: 0,
-        maxValue: 140,
+        maxValue: 130,
+        yValue: 85,
         label: '주의혈압',
         color: const Color(0xFF8BC34A), // 연두색
-        yValue: 85, // Y축 값 추가
       ),
       PressureRange(
         minValue: 0,
         maxValue: 120,
+        yValue: 80, // Y축 값 추가
         label: '정상',
         color: const Color(0xFF4CAF50), // 초록색
-        yValue: 80, // Y축 값 추가
       ),
       PressureRange(
         minValue: 0,
         maxValue: 90,
+        yValue: 60, // Y축 값 추가
         label: '저혈압',
         color: const Color(0xFF2196F3), // 파란색
-        yValue: 60, // Y축 값 추가
       ),
     ];
   }
