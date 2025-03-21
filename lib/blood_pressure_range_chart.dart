@@ -43,6 +43,17 @@ class BloodPressureRangeChart extends StatefulWidget {
   /// 기본값은 [40.0, 60.0, 80.0, 85.0, 90.0, 100.0, 120.0]입니다.
   final List<double> rangeCoordinates;
 
+  /// 차트의 가로 세로 비율
+  ///
+  /// 이 값이 클수록 차트가 넓어집니다. 기본값은 2.0입니다.
+  final double aspectRatio;
+
+  /// 차트 영역의 세로 비율
+  ///
+  /// 전체 위젯 높이 중 차트가 차지하는 비율. 0.0~1.0 사이의 값.
+  /// 이 값이 클수록 차트 영역이 높아집니다. 기본값은 0.7입니다.
+  final double chartHeightRatio;
+
   const BloodPressureRangeChart({
     Key? key,
     required this.ranges,
@@ -60,7 +71,45 @@ class BloodPressureRangeChart extends StatefulWidget {
       100.0,
       120.0,
     ], // 기본값 설정
+    this.aspectRatio = 2.0, // 기본 가로 세로 비율
+    this.chartHeightRatio = 0.7, // 기본 차트 높이 비율
   }) : super(key: key);
+
+  /// 기본 샘플 범위를 사용하여 차트를 생성하는 편의 생성자
+  ///
+  /// [ranges] 대신 이 생성자를 사용하면 기본 샘플 범위가 자동으로 적용됩니다.
+  factory BloodPressureRangeChart.withSampleRanges({
+    Key? key,
+    required double pointerXValue,
+    String chartTitle = '',
+    String currentValueLabel = '나의 건강상태',
+    List<double> yAxisRange = const [40, 120],
+    double? pointerYValue,
+    List<double> rangeCoordinates = const [
+      40.0,
+      60.0,
+      80.0,
+      85.0,
+      90.0,
+      100.0,
+      120.0,
+    ],
+    double aspectRatio = 2.0,
+    double chartHeightRatio = 0.7,
+  }) {
+    return BloodPressureRangeChart(
+      key: key,
+      ranges: PressureRange.getSampleRanges(),
+      pointerXValue: pointerXValue,
+      chartTitle: chartTitle,
+      currentValueLabel: currentValueLabel,
+      yAxisRange: yAxisRange,
+      pointerYValue: pointerYValue,
+      rangeCoordinates: rangeCoordinates,
+      aspectRatio: aspectRatio,
+      chartHeightRatio: chartHeightRatio,
+    );
+  }
 
   @override
   State<BloodPressureRangeChart> createState() =>
@@ -134,7 +183,7 @@ class _BloodPressureRangeChartState extends State<BloodPressureRangeChart> {
             ),
           ),
         AspectRatio(
-          aspectRatio: 2.0,
+          aspectRatio: widget.aspectRatio,
           child: CustomPaint(
             painter: BloodPressureRangePainter(
               ranges: widget.ranges,
@@ -144,6 +193,7 @@ class _BloodPressureRangeChartState extends State<BloodPressureRangeChart> {
               minYValue: _minYValue,
               maxYValue: _maxYValue,
               rangeCoordinates: widget.rangeCoordinates,
+              chartHeightRatio: widget.chartHeightRatio,
             ),
           ),
         ),
@@ -207,6 +257,7 @@ class BloodPressureRangePainter extends CustomPainter {
   final double minYValue;
   final double maxYValue;
   final List<double> rangeCoordinates; // 혈압 좌표 범위 추가
+  final double chartHeightRatio; // 차트 영역 높이 비율
 
   BloodPressureRangePainter({
     required this.ranges,
@@ -216,6 +267,7 @@ class BloodPressureRangePainter extends CustomPainter {
     required this.minYValue,
     required this.maxYValue,
     required this.rangeCoordinates,
+    this.chartHeightRatio = 0.7,
   });
 
   @override
@@ -223,8 +275,9 @@ class BloodPressureRangePainter extends CustomPainter {
     // 범위가 없으면 그리지 않음
     if (ranges.isEmpty) return;
 
-    final double chartHeight = size.height * 0.7;
-    final double chartTop = size.height * 0.15;
+    final double chartHeight = size.height * chartHeightRatio; // 차트 높이 비율 적용
+    final double chartTop =
+        size.height * ((1 - chartHeightRatio) / 2); // 중앙 정렬을 위한 상단 여백 계산
     final double chartBottom = chartTop + chartHeight;
 
     // 혈압 범위를 구분하는 값들 - 외부에서 전달받은 좌표 사용

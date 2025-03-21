@@ -20,24 +20,47 @@ class _BloodPressureRangeScreenState extends State<BloodPressureRangeScreen> {
         elevation: 0,
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 20),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 20),
 
-              // 혈압 범위 차트 - 비선형 스케일(4:1:1:1:1:1 비율) 적용
-              BloodPressureRangeChart(
-                // chartTitle: '혈압(mmHg)',
-                ranges: PressureRange.getSampleRanges(),
-                currentValueLabel: '나의 건강상태',
-                // X축 값은 0~200 범위이며, 각 구간(저혈압, 정상 등)에 맞게 비선형 비율로 표시됨
-                pointerXValue: 120, // 120mmHg의 위치 (주의혈압 구간)
-                pointerYValue: 60, // 60의 위치 (저혈압-정상 경계)
-                // 사용자 정의 범위 좌표 사용 가능 (기본값: [40, 60, 80, 90, 120])
-              ),
-            ],
+                const Text(
+                  '기본 높이 설정 (aspectRatio=2.0, chartHeightRatio=0.7)',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 10),
+
+                // 기본 비율 설정 (aspectRatio=2.0, chartHeightRatio=0.7)
+                BloodPressureRangeChart.withSampleRanges(
+                  chartTitle: '기본 높이',
+                  currentValueLabel: '나의 건강상태',
+                  pointerXValue: 120,
+                  pointerYValue: 60,
+                  // 기본 설정 사용 (aspectRatio=2.0, chartHeightRatio=0.7)
+                ),
+
+                const SizedBox(height: 40),
+
+                const Text(
+                  '높은 차트 (aspectRatio=1.5, chartHeightRatio=0.8)',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 10),
+
+                // 높은 차트 - aspectRatio를 낮추고, chartHeightRatio를 높임
+                BloodPressureRangeChart.withSampleRanges(
+                  chartTitle: '높은 차트',
+                  currentValueLabel: '나의 건강상태',
+                  pointerXValue: 120,
+                  pointerYValue: 100,
+                  chartHeightRatio: 0.5, // 차트 영역 비율 증가 (더 많은 공간 차지)
+                ),
+              ],
+            ),
           ),
         ),
       ),
