@@ -159,113 +159,116 @@ class _GaugeChartState extends State<GaugeChart> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SizedBox(
-          width: widget.size,
-          height: widget.size / 2 + 80, // 반원 높이 + 라벨 공간
-          child: CustomPaint(
-            painter: GaugeChartPainter(
-              value: widget.value,
-              minValue: widget.minValue,
-              maxValue: widget.maxValue,
-              segments: widget.segments,
-              pointerThickness: widget.pointerThickness,
-              pointerLength: widget.pointerLength,
-              thickness: widget.thickness,
-              valueTextStyle:
-                  widget.valueTextStyle ??
-                  const TextStyle(
-                    color: Colors.black,
-                    fontSize: 38,
-                    fontWeight: FontWeight.bold,
-                  ),
-              labelTextStyle:
-                  widget.labelTextStyle ??
-                  const TextStyle(color: Colors.grey, fontSize: 14),
-              centerLabelTextStyle:
-                  widget.centerLabelTextStyle ??
-                  const TextStyle(color: Colors.black54, fontSize: 16),
-              centerUnitTextStyle:
-                  widget.centerUnitTextStyle ??
-                  const TextStyle(color: Colors.black54, fontSize: 16),
-              centerLabel: _centerLabel,
-              unit: _unit,
-              decimalPlaces: _decimalPlaces,
-              valueFormatter: widget.valueFormatter,
-              showValue: widget.showValue,
-              textYOffset: _textYOffset,
-            ),
-            foregroundPainter: PointerPainter(
-              value: widget.value,
-              minValue: widget.minValue,
-              maxValue: widget.maxValue,
-              pointerThickness: widget.pointerThickness,
-              pointerLength: widget.pointerLength,
-              thickness: widget.thickness,
+    return Padding(
+      padding: const EdgeInsets.all(30.0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: widget.size,
+            height: widget.size / 2 + 80, // 반원 높이 + 라벨 공간
+            child: CustomPaint(
+              painter: GaugeChartPainter(
+                value: widget.value,
+                minValue: widget.minValue,
+                maxValue: widget.maxValue,
+                segments: widget.segments,
+                pointerThickness: widget.pointerThickness,
+                pointerLength: widget.pointerLength,
+                thickness: widget.thickness,
+                valueTextStyle:
+                    widget.valueTextStyle ??
+                    const TextStyle(
+                      color: Colors.black,
+                      fontSize: 38,
+                      fontWeight: FontWeight.bold,
+                    ),
+                labelTextStyle:
+                    widget.labelTextStyle ??
+                    const TextStyle(color: Colors.grey, fontSize: 14),
+                centerLabelTextStyle:
+                    widget.centerLabelTextStyle ??
+                    const TextStyle(color: Colors.black54, fontSize: 16),
+                centerUnitTextStyle:
+                    widget.centerUnitTextStyle ??
+                    const TextStyle(color: Colors.black54, fontSize: 16),
+                centerLabel: _centerLabel,
+                unit: _unit,
+                decimalPlaces: _decimalPlaces,
+                valueFormatter: widget.valueFormatter,
+                showValue: widget.showValue,
+                textYOffset: _textYOffset,
+              ),
+              foregroundPainter: PointerPainter(
+                value: widget.value,
+                minValue: widget.minValue,
+                maxValue: widget.maxValue,
+                pointerThickness: widget.pointerThickness,
+                pointerLength: widget.pointerLength,
+                thickness: widget.thickness,
+              ),
             ),
           ),
-        ),
-        if (widget.showControls) ...[
-          const SizedBox(height: 20),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    decoration: const InputDecoration(
-                      labelText: '라벨',
-                      hintText: 'BMI',
-                      isDense: true,
-                      contentPadding: EdgeInsets.symmetric(
-                        vertical: 10,
-                        horizontal: 8,
+          if (widget.showControls) ...[
+            const SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      decoration: const InputDecoration(
+                        labelText: '라벨',
+                        hintText: 'BMI',
+                        isDense: true,
+                        contentPadding: EdgeInsets.symmetric(
+                          vertical: 10,
+                          horizontal: 8,
+                        ),
                       ),
+                      controller: TextEditingController(text: _centerLabel),
+                      onChanged: _updateLabel,
                     ),
-                    controller: TextEditingController(text: _centerLabel),
-                    onChanged: _updateLabel,
                   ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: TextField(
-                    decoration: const InputDecoration(
-                      labelText: '단위',
-                      hintText: '(kg/m²)',
-                      isDense: true,
-                      contentPadding: EdgeInsets.symmetric(
-                        vertical: 10,
-                        horizontal: 8,
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: TextField(
+                      decoration: const InputDecoration(
+                        labelText: '단위',
+                        hintText: '(kg/m²)',
+                        isDense: true,
+                        contentPadding: EdgeInsets.symmetric(
+                          vertical: 10,
+                          horizontal: 8,
+                        ),
                       ),
+                      controller: TextEditingController(text: _unit),
+                      onChanged: _updateUnit,
                     ),
-                    controller: TextEditingController(text: _unit),
-                    onChanged: _updateUnit,
                   ),
-                ),
-                const SizedBox(width: 10),
-                DropdownButton<int>(
-                  value: _decimalPlaces,
-                  isDense: true,
-                  items:
-                      [0, 1, 2, 3].map((int value) {
-                        return DropdownMenuItem<int>(
-                          value: value,
-                          child: Text('소수점: $value'),
-                        );
-                      }).toList(),
-                  onChanged: (value) {
-                    if (value != null) {
-                      _updateDecimalPlaces(value);
-                    }
-                  },
-                ),
-              ],
+                  const SizedBox(width: 10),
+                  DropdownButton<int>(
+                    value: _decimalPlaces,
+                    isDense: true,
+                    items:
+                        [0, 1, 2, 3].map((int value) {
+                          return DropdownMenuItem<int>(
+                            value: value,
+                            child: Text('소수점: $value'),
+                          );
+                        }).toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        _updateDecimalPlaces(value);
+                      }
+                    },
+                  ),
+                ],
+              ),
             ),
-          ),
+          ],
         ],
-      ],
+      ),
     );
   }
 }
@@ -364,10 +367,16 @@ class GaugeChartPainter extends CustomPainter {
 
   void _drawCenterText(Canvas canvas, Offset center) {
     // 값 텍스트 준비 (먼저 계산하지만 나중에 그림)
-    final String formattedValue =
-        valueFormatter != null
-            ? valueFormatter!(value)
-            : value.toStringAsFixed(decimalPlaces);
+    String formattedValue;
+    if (valueFormatter != null) {
+      formattedValue = valueFormatter!(value);
+    } else {
+      // 소수점 뒤가 정확히 '.0'인 경우에만 정수로 표시
+      formattedValue = value.toStringAsFixed(decimalPlaces);
+      if (formattedValue.endsWith(".0")) {
+        formattedValue = value.toInt().toString();
+      }
+    }
 
     final valuePainter = TextPainter(
       text: TextSpan(text: formattedValue, style: valueTextStyle),

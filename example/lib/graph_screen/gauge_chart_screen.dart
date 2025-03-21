@@ -6,7 +6,7 @@ class GaugeChartScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    double _value = 70;
+    double _value = 13;
     final double _minValue = 0;
     final double _maxValue = 300;
     return Scaffold(
@@ -16,8 +16,7 @@ class GaugeChartScreen extends StatelessWidget {
         foregroundColor: Colors.black,
         elevation: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(28.0),
+      body: SizedBox(
         child: GaugeChart(
           value: _value,
           minValue: _minValue,
