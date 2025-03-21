@@ -148,6 +148,45 @@ class BloodPressureRangePainter extends CustomPainter {
     final double chartTop = size.height * 0.15;
     final double chartBottom = chartTop + chartHeight;
 
+    // 혈압 범위를 구분하는 값들 - 모든 매핑 함수에서 공통으로 사용
+    final List<double> rangeValues = [
+      40.0,
+      60.0,
+      80.0,
+      85.0,
+      90.0,
+      100.0,
+      120.0,
+    ];
+    final int totalRanges = rangeValues.length - 1; // 총 구간 개수
+    final double heightPerRange = chartHeight / totalRanges; // 각 구간당 동일한 높이
+
+    // Y값을 픽셀 위치로 매핑하는 함수 추가
+    double _mapYValueToPixel(double yValue) {
+      // 경계값 처리
+      if (yValue <= rangeValues.first) return chartBottom;
+      if (yValue >= rangeValues.last) return chartBottom - chartHeight;
+
+      // 해당 값이 속한 구간 찾기
+      int rangeIndex = 0;
+      for (int i = 0; i < rangeValues.length - 1; i++) {
+        if (yValue >= rangeValues[i] && yValue <= rangeValues[i + 1]) {
+          rangeIndex = i;
+          break;
+        }
+      }
+
+      // 구간 내에서의 비율 계산 (0~1 사이 값)
+      double rangeStart = rangeValues[rangeIndex];
+      double rangeEnd = rangeValues[rangeIndex + 1];
+      double ratioInRange = (yValue - rangeStart) / (rangeEnd - rangeStart);
+
+      // 픽셀 위치 계산 (구간의 시작 위치 + 구간 내 비율에 따른 오프셋)
+      double startY = chartBottom - (rangeIndex * heightPerRange);
+      double endY = startY - heightPerRange;
+      return startY - (ratioInRange * (startY - endY));
+    }
+
     // y축 범위 계산 - PressureRange의 yValue에서 계산
     double minYValue = 40.0; // 항상 40으로 고정
     double maxYValue = 0.0;
@@ -225,9 +264,8 @@ class BloodPressureRangePainter extends CustomPainter {
       final double rangeEndX = chartLeft + (rangeEnd * chartWidth);
       final double rangeWidth = rangeEndX - chartLeft;
 
-      // Y값을 기준으로 높이 계산 (Y축)
-      final double normalizedYValue = (range.yValue - minYValue) / yValueRange;
-      final double rangeTop = chartBottom - (normalizedYValue * chartHeight);
+      // Y값을 기준으로 높이 계산 (Y축) - 수정된 매핑 함수 사용
+      final double rangeTop = _mapYValueToPixel(range.yValue);
 
       // 범위 막대 그리기 (바닥부터 현재 높이까지)
       final Paint rangePaint =
@@ -255,6 +293,9 @@ class BloodPressureRangePainter extends CustomPainter {
       chartHeight,
       minYValue,
       maxYValue,
+      rangeValues,
+      totalRanges,
+      heightPerRange,
     );
 
     // X축 값 그리기
@@ -276,16 +317,17 @@ class BloodPressureRangePainter extends CustomPainter {
       chartLeft,
       minYValue,
       maxYValue,
+      rangeValues,
+      totalRanges,
+      heightPerRange,
     );
 
     // 현재 값 표시 - X축 위치 계산
     final double currentX =
         chartLeft + (((currentValue - minXValue) / xValueRange) * chartWidth);
 
-    // Y축 슬라이더 값에 따른 Y축 위치 계산
-    final double normalizedYValue =
-        (yAxisValue - minYValue) / yValueRange; // 0.0 ~ 1.0 사이의 값
-    final double circleCenterY = chartBottom - (normalizedYValue * chartHeight);
+    // Y축 슬라이더 값에 따른 Y축 위치 계산 - 수정된 매핑 함수 사용
+    final double circleCenterY = _mapYValueToPixel(yAxisValue);
     final double circleRadius = 20.0;
 
     // 말풍선 위치 계산 - 원 위 6dp 간격 유지
@@ -375,34 +417,53 @@ class BloodPressureRangePainter extends CustomPainter {
     double chartHeight,
     double minYValue,
     double maxYValue,
+    List<double> rangeValues,
+    int totalRanges,
+    double heightPerRange,
   ) {
+    // Y값을 픽셀 위치로 매핑하는 함수 추가 - 외부 함수에 접근하기 위한 클로저
+    double mapYValueToPixel(double yValue) {
+      // 경계값 처리
+      if (yValue <= rangeValues.first) return chartTop + chartHeight;
+      if (yValue >= rangeValues.last) return chartTop;
+
+      // 해당 값이 속한 구간 찾기
+      int rangeIndex = 0;
+      for (int i = 0; i < rangeValues.length - 1; i++) {
+        if (yValue >= rangeValues[i] && yValue <= rangeValues[i + 1]) {
+          rangeIndex = i;
+          break;
+        }
+      }
+
+      // 구간 내에서의 비율 계산 (0~1 사이 값)
+      double rangeStart = rangeValues[rangeIndex];
+      double rangeEnd = rangeValues[rangeIndex + 1];
+      double ratioInRange = (yValue - rangeStart) / (rangeEnd - rangeStart);
+
+      // 픽셀 위치 계산 (구간의 시작 위치 + 구간 내 비율에 따른 오프셋)
+      double startY = chartTop + chartHeight - (rangeIndex * heightPerRange);
+      double endY = startY - heightPerRange;
+      return startY - (ratioInRange * (startY - endY));
+    }
+
     // 범위를 yValue 기준으로 정렬 (낮은 값부터 높은 값 순으로)
     final List<PressureRange> sortedRanges = List.from(ranges)
       ..sort((a, b) => a.yValue.compareTo(b.yValue));
 
-    final double yValueRange = maxYValue - minYValue;
-
     for (int i = 0; i < sortedRanges.length; i++) {
       final range = sortedRanges[i];
 
-      // 중간 위치 계산
-      final double normalizedHeight = (range.yValue - minYValue) / yValueRange;
-      double y = chartTop + chartHeight * (1 - normalizedHeight);
-
       // 각 범위의 중간 위치 계산
+      double y;
       if (i == 0) {
-        // 첫 번째 범위 (저혈압)
-        final double prevY =
-            chartTop +
-            chartHeight * (1 - (minYValue - minYValue) / yValueRange); // 최저값 위치
-        y = (y + prevY) / 2; // 최저값과 현재 값의 중간
-      } else if (i < sortedRanges.length) {
-        // 중간 범위들
-        final double prevNormalizedHeight =
-            (sortedRanges[i - 1].yValue - minYValue) / yValueRange;
-        final double prevY =
-            chartTop + chartHeight * (1 - prevNormalizedHeight);
-        y = (y + prevY) / 2; // 이전 범위와 현재 범위의 중간
+        // 첫 번째 범위 (저혈압) - 최저값과 현재 값의 중간
+        double midValue = (minYValue + range.yValue) / 2;
+        y = mapYValueToPixel(midValue);
+      } else {
+        // 중간 범위들 - 이전 범위와 현재 범위의 중간
+        double midValue = (sortedRanges[i - 1].yValue + range.yValue) / 2;
+        y = mapYValueToPixel(midValue);
       }
 
       _drawText(
@@ -551,19 +612,45 @@ class BloodPressureRangePainter extends CustomPainter {
     double chartHeight,
     double minYValue,
     double maxYValue,
+    List<double> rangeValues,
+    int totalRanges,
+    double heightPerRange,
   ) {
-    final List<double> yValues = [60, 80, 100, 120];
+    // Y값을 픽셀 위치로 매핑하는 함수 추가 - 외부 함수에 접근하기 위한 클로저
+    double mapYValueToPixel(double yValue) {
+      // 경계값 처리
+      if (yValue <= rangeValues.first) return chartTop + chartHeight;
+      if (yValue >= rangeValues.last) return chartTop;
+
+      // 해당 값이 속한 구간 찾기
+      int rangeIndex = 0;
+      for (int i = 0; i < rangeValues.length - 1; i++) {
+        if (yValue >= rangeValues[i] && yValue <= rangeValues[i + 1]) {
+          rangeIndex = i;
+          break;
+        }
+      }
+
+      // 구간 내에서의 비율 계산 (0~1 사이 값)
+      double rangeStart = rangeValues[rangeIndex];
+      double rangeEnd = rangeValues[rangeIndex + 1];
+      double ratioInRange = (yValue - rangeStart) / (rangeEnd - rangeStart);
+
+      // 픽셀 위치 계산 (구간의 시작 위치 + 구간 내 비율에 따른 오프셋)
+      double startY = chartTop + chartHeight - (rangeIndex * heightPerRange);
+      double endY = startY - heightPerRange;
+      return startY - (ratioInRange * (startY - endY));
+    }
+
     final Paint gridPaint =
         Paint()
           ..color = Colors.grey.withOpacity(0.3)
           ..style = PaintingStyle.stroke
           ..strokeWidth = 1;
 
-    for (double value in yValues) {
-      // 값의 상대적 위치 계산 (60~120 범위로 정규화)
-      final double normalizedValue =
-          (value - minYValue) / (maxYValue - minYValue);
-      final double y = chartTop + chartHeight * (1 - normalizedValue);
+    for (double value in rangeValues) {
+      // 값의 상대적 위치 계산 - 수정된 매핑 함수 사용
+      final double y = mapYValueToPixel(value);
 
       // 격자선 그리기
       canvas.drawLine(Offset(chartLeft, y), Offset(chartRight, y), gridPaint);
@@ -588,15 +675,40 @@ class BloodPressureRangePainter extends CustomPainter {
     double chartLeft,
     double minYValue,
     double maxYValue,
+    List<double> rangeValues,
+    int totalRanges,
+    double heightPerRange,
   ) {
-    // 지정된 값들을 사용
-    final List<double> specificValues = [40, 60, 80, 85, 90, 100, 120];
-    final double yValueRange = maxYValue - minYValue;
+    // Y값을 픽셀 위치로 매핑하는 함수 추가 - 외부 함수에 접근하기 위한 클로저
+    double mapYValueToPixel(double yValue) {
+      // 경계값 처리
+      if (yValue <= rangeValues.first) return chartTop + chartHeight;
+      if (yValue >= rangeValues.last) return chartTop;
 
-    for (double value in specificValues) {
-      // 값의 상대적 위치 계산
-      final double normalizedValue = (value - minYValue) / yValueRange;
-      final double y = chartTop + chartHeight * (1 - normalizedValue) - 20;
+      // 해당 값이 속한 구간 찾기
+      int rangeIndex = 0;
+      for (int i = 0; i < rangeValues.length - 1; i++) {
+        if (yValue >= rangeValues[i] && yValue <= rangeValues[i + 1]) {
+          rangeIndex = i;
+          break;
+        }
+      }
+
+      // 구간 내에서의 비율 계산 (0~1 사이 값)
+      double rangeStart = rangeValues[rangeIndex];
+      double rangeEnd = rangeValues[rangeIndex + 1];
+      double ratioInRange = (yValue - rangeStart) / (rangeEnd - rangeStart);
+
+      // 픽셀 위치 계산 (구간의 시작 위치 + 구간 내 비율에 따른 오프셋)
+      double startY = chartTop + chartHeight - (rangeIndex * heightPerRange);
+      double endY = startY - heightPerRange;
+      return startY - (ratioInRange * (startY - endY));
+    }
+
+    // 지정된 값들을 사용
+    for (double value in rangeValues) {
+      // 값의 상대적 위치 계산 - 수정된 매핑 함수 사용
+      final double y = mapYValueToPixel(value) - 20; // 텍스트 위치 조정을 위한 오프셋
 
       // 텍스트와 그래프 사이 간격을 충분히 확보하고, 좌측 여백 제거
       _drawText(
