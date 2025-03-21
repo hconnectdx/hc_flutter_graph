@@ -1,19 +1,65 @@
 import 'package:flutter/material.dart';
 
+/// 혈압 범위를 표시하는 차트 위젯
+///
+/// 사용 예시:
+/// ```dart
+/// BloodPressureRangeChart(
+///   ranges: PressureRange.getSampleRanges(),
+///   pointerXValue: 130, // X축 포인터 위치 지정
+///   chartTitle: '혈압 범위 차트',
+///   currentValueLabel: '정상',
+///   // Y축 포인터 위치 직접 설정 (슬라이더 표시 안됨)
+///   pointerYValue: 85,
+///   // 커스텀 Y축 범위 설정
+///   yAxisRange: [30, 150],
+///   // 커스텀 혈압 좌표 설정
+///   rangeCoordinates: [30, 50, 70, 90, 110, 130, 150],
+/// )
+/// ```
 class BloodPressureRangeChart extends StatefulWidget {
   final String chartTitle;
   final List<PressureRange> ranges;
-  final double currentValue;
   final String currentValueLabel;
   final List<double> yAxisRange; // Y축 범위 추가
+
+  /// X축 포인터 위치를 지정하는 값
+  ///
+  /// 이 값이 원형 포인터의 X축 위치를 결정합니다.
+  final double pointerXValue;
+
+  /// Y축 포인터 위치를 지정하는 값
+  ///
+  /// 이 값이 제공되면 슬라이더가 표시되지 않고 원형 포인터의 Y축 위치가 이 값으로 고정됩니다.
+  /// null인 경우 슬라이더가 표시되고 사용자가 포인터 위치를 조절할 수 있습니다.
+  final double? pointerYValue;
+
+  /// 혈압 범위의 좌표 값을 정의하는 리스트
+  ///
+  /// 이 좌표값들은 차트의 Y축 높이를 동일한 비율로 나누는 데 사용됩니다.
+  /// 각 범위(저혈압, 정상, 주의혈압 등)가 동일한 높이를 갖도록 합니다.
+  ///
+  /// 해당 값은 반드시 오름차순으로 정렬되어야 하며, 최소 2개 이상이어야 합니다.
+  /// 기본값은 [40.0, 60.0, 80.0, 85.0, 90.0, 100.0, 120.0]입니다.
+  final List<double> rangeCoordinates;
 
   const BloodPressureRangeChart({
     Key? key,
     required this.ranges,
-    required this.currentValue,
+    required this.pointerXValue,
     this.chartTitle = '',
     this.currentValueLabel = '나의 건강상태',
     this.yAxisRange = const [40, 120], // 기본값 설정
+    this.pointerYValue, // Y축 포인터 위치 (null이면 슬라이더 값 사용)
+    this.rangeCoordinates = const [
+      40.0,
+      60.0,
+      80.0,
+      85.0,
+      90.0,
+      100.0,
+      120.0,
+    ], // 기본값 설정
   }) : super(key: key);
 
   @override
@@ -46,6 +92,32 @@ class _BloodPressureRangeChartState extends State<BloodPressureRangeChart> {
 
   @override
   Widget build(BuildContext context) {
+    // 좌표가 최소 2개 이상인지 확인하고, 오름차순으로 정렬되어 있는지 확인
+    assert(
+      widget.rangeCoordinates.length >= 2,
+      'rangeCoordinates must have at least 2 values',
+    );
+    assert(() {
+      for (int i = 0; i < widget.rangeCoordinates.length - 1; i++) {
+        if (widget.rangeCoordinates[i] >= widget.rangeCoordinates[i + 1]) {
+          return false;
+        }
+      }
+      return true;
+    }(), 'rangeCoordinates must be sorted in ascending order');
+
+    // 포인터 Y값이 제공된 경우 범위 내 값인지 확인
+    if (widget.pointerYValue != null) {
+      assert(
+        widget.pointerYValue! >= widget.rangeCoordinates.first &&
+            widget.pointerYValue! <= widget.rangeCoordinates.last,
+        'pointerYValue must be within range of rangeCoordinates',
+      );
+    }
+
+    // 사용할 Y축 값 결정 (pointerYValue가 제공되면 그 값 사용, 아니면 슬라이더 값 사용)
+    final double effectiveYAxisValue = widget.pointerYValue ?? _yAxisValue;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -66,19 +138,24 @@ class _BloodPressureRangeChartState extends State<BloodPressureRangeChart> {
           child: CustomPaint(
             painter: BloodPressureRangePainter(
               ranges: widget.ranges,
-              currentValue: widget.currentValue,
+              pointerXValue: widget.pointerXValue,
               currentValueLabel: widget.currentValueLabel,
-              yAxisValue: _yAxisValue,
+              yAxisValue: effectiveYAxisValue,
               minYValue: _minYValue,
               maxYValue: _maxYValue,
+              rangeCoordinates: widget.rangeCoordinates,
             ),
           ),
         ),
-        // Y축 슬라이더 추가
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: _buildYAxisSlider(),
-        ),
+        // Y축 슬라이더 추가 - pointerYValue가 제공되지 않은 경우에만 표시
+        if (widget.pointerYValue == null)
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 8.0,
+            ),
+            child: _buildYAxisSlider(),
+          ),
       ],
     );
   }
@@ -124,19 +201,21 @@ class _BloodPressureRangeChartState extends State<BloodPressureRangeChart> {
 
 class BloodPressureRangePainter extends CustomPainter {
   final List<PressureRange> ranges;
-  final double currentValue;
+  final double pointerXValue;
   final String currentValueLabel;
   final double yAxisValue;
   final double minYValue;
   final double maxYValue;
+  final List<double> rangeCoordinates; // 혈압 좌표 범위 추가
 
   BloodPressureRangePainter({
     required this.ranges,
-    required this.currentValue,
+    required this.pointerXValue,
     required this.currentValueLabel,
     required this.yAxisValue,
     required this.minYValue,
     required this.maxYValue,
+    required this.rangeCoordinates,
   });
 
   @override
@@ -148,16 +227,8 @@ class BloodPressureRangePainter extends CustomPainter {
     final double chartTop = size.height * 0.15;
     final double chartBottom = chartTop + chartHeight;
 
-    // 혈압 범위를 구분하는 값들 - 모든 매핑 함수에서 공통으로 사용
-    final List<double> rangeValues = [
-      40.0,
-      60.0,
-      80.0,
-      85.0,
-      90.0,
-      100.0,
-      120.0,
-    ];
+    // 혈압 범위를 구분하는 값들 - 외부에서 전달받은 좌표 사용
+    final List<double> rangeValues = rangeCoordinates;
     final int totalRanges = rangeValues.length - 1; // 총 구간 개수
     final double heightPerRange = chartHeight / totalRanges; // 각 구간당 동일한 높이
 
@@ -324,7 +395,7 @@ class BloodPressureRangePainter extends CustomPainter {
 
     // 현재 값 표시 - X축 위치 계산
     final double currentX =
-        chartLeft + (((currentValue - minXValue) / xValueRange) * chartWidth);
+        chartLeft + (((pointerXValue - minXValue) / xValueRange) * chartWidth);
 
     // Y축 슬라이더 값에 따른 Y축 위치 계산 - 수정된 매핑 함수 사용
     final double circleCenterY = _mapYValueToPixel(yAxisValue);
@@ -395,16 +466,6 @@ class BloodPressureRangePainter extends CustomPainter {
       Offset(currentX, circleCenterY),
       20,
       currentPointBorderPaint,
-    );
-
-    // 현재 값 숫자 그리기 - 상태 확인 위치 계산
-    _drawText(
-      canvas: canvas,
-      text: currentValue.toInt().toString(),
-      position: Offset(currentX, chartBottom + 80),
-      fontSize: 25,
-      color: Colors.black,
-      fontWeight: FontWeight.bold,
     );
   }
 
@@ -752,36 +813,18 @@ class BloodPressureRangePainter extends CustomPainter {
         fontSize: 30,
         color: Colors.grey,
       );
-
-      // 최저/최고 텍스트
-      if (value == minXValue) {
-        _drawText(
-          canvas: canvas,
-          text: '최저',
-          position: Offset(x, chartBottom + 70),
-          fontSize: 30,
-          color: Colors.grey,
-        );
-      } else if (value == maxXValue) {
-        _drawText(
-          canvas: canvas,
-          text: '최고',
-          position: Offset(x, chartBottom + 70),
-          fontSize: 30,
-          color: Colors.grey,
-        );
-      }
     }
   }
 
   @override
   bool shouldRepaint(BloodPressureRangePainter oldDelegate) {
     return oldDelegate.ranges != ranges ||
-        oldDelegate.currentValue != currentValue ||
+        oldDelegate.pointerXValue != pointerXValue ||
         oldDelegate.currentValueLabel != currentValueLabel ||
         oldDelegate.yAxisValue != yAxisValue ||
         oldDelegate.minYValue != minYValue ||
-        oldDelegate.maxYValue != maxYValue;
+        oldDelegate.maxYValue != maxYValue ||
+        oldDelegate.rangeCoordinates != rangeCoordinates;
   }
 }
 

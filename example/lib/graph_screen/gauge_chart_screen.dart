@@ -47,6 +47,7 @@ class GaugeChartScreen extends StatelessWidget {
                 ),
                 GaugeSegment(startValue: 250, endValue: 300, color: Colors.red),
               ],
+
               size: 680,
               pointerThickness: 7.5,
               thickness: 120,
