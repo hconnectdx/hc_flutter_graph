@@ -7,11 +7,11 @@ class GripStrengthExample extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final List<LinearChartData> data = [
-      LinearChartData(date: "24.12.01", strength: 15),
-      LinearChartData(date: "24.12.01", strength: 35.4),
-      LinearChartData(date: "24.12.01", strength: 21),
-      LinearChartData(date: "24.12.01", strength: 42),
-      LinearChartData(date: "24.12.01", strength: 35),
+      LinearChartData(date: "24.12.01", value: 15),
+      LinearChartData(date: "24.12.01", value: 35.4),
+      LinearChartData(date: "24.12.01", value: 21),
+      LinearChartData(date: "24.12.01", value: 42),
+      LinearChartData(date: "24.12.01", value: 35),
     ];
 
     return Scaffold(

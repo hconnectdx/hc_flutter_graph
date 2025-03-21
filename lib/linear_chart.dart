@@ -109,7 +109,7 @@ class GripStrengthChartPainter extends CustomPainter {
   // 데이터의 평균값 계산 메서드
   double _calculateAverage() {
     if (data.isEmpty) return 0.0;
-    final sum = data.fold(0.0, (sum, item) => sum + item.strength);
+    final sum = data.fold(0.0, (sum, item) => sum + item.value);
     return sum / data.length;
   }
 
@@ -125,7 +125,7 @@ class GripStrengthChartPainter extends CustomPainter {
     // 최대 값 계산 (10의 배수로 올림)
     const double defaultMaxValue = 50.0;
     final double maxStrength = data
-        .map((d) => d.strength)
+        .map((d) => d.value)
         .reduce((a, b) => a > b ? a : b);
     final double maxValue =
         maxStrength > defaultMaxValue
@@ -197,7 +197,7 @@ class GripStrengthChartPainter extends CustomPainter {
     // 최대 값 계산 (10의 배수로 올림)
     const double defaultMaxValue = 50.0;
     final double maxStrength = data
-        .map((d) => d.strength)
+        .map((d) => d.value)
         .reduce((a, b) => a > b ? a : b);
     final double maxValue =
         maxStrength > defaultMaxValue
@@ -353,7 +353,7 @@ class GripStrengthChartPainter extends CustomPainter {
     for (int i = 0; i < data.length; i++) {
       final x = startX + i * pointSpacing;
       // Use strength value for line chart
-      final normalizedValue = (data[i].strength - minValue) / valueRange;
+      final normalizedValue = (data[i].value - minValue) / valueRange;
       final y =
           chartHeight * (1 - normalizedValue); // Scale to 100% of chart height
       points.add(Offset(x, y));
@@ -390,7 +390,7 @@ class GripStrengthChartPainter extends CustomPainter {
 
     for (int i = 0; i < data.length; i++) {
       final x = startX + i * pointSpacing;
-      final normalizedValue = (data[i].strength - minValue) / valueRange;
+      final normalizedValue = (data[i].value - minValue) / valueRange;
       final y =
           size.height * (1 - normalizedValue); // Scale to 100% of chart height
 
@@ -409,9 +409,9 @@ class GripStrengthChartPainter extends CustomPainter {
 
       // 값 표시 (소수점 첫째 자리까지 표시)
       String displayText =
-          data[i].strength % 1 == 0
-              ? "${data[i].strength.toInt()}"
-              : "${data[i].strength.toStringAsFixed(1)}";
+          data[i].value % 1 == 0
+              ? "${data[i].value.toInt()}"
+              : "${data[i].value.toStringAsFixed(1)}";
 
       textPainter.text = TextSpan(text: displayText, style: textStyle);
       textPainter.layout();
@@ -452,7 +452,7 @@ class GripStrengthChartPainter extends CustomPainter {
 
 class LinearChartData {
   final String date;
-  final double strength;
+  final double value;
 
-  LinearChartData({required this.date, required this.strength});
+  LinearChartData({required this.date, required this.value});
 }
