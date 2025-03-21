@@ -1033,13 +1033,13 @@ class PressureRange {
         maxValue: 200,
         yValue: 120,
         label: '제2기 고혈압',
-        color: const Color(0xFFF44336), // 빨간색
+        color: const Color(0xFFef193d), // 빨간색
       ),
       PressureRange(
         minValue: 0,
         maxValue: 160,
         label: '제1기 고혈압',
-        color: const Color(0xFFFF9800), // 주황색
+        color: const Color(0xFFf97901), // 주황색
         yValue: 100, // Y축 값 추가
       ),
       PressureRange(
@@ -1047,28 +1047,28 @@ class PressureRange {
         maxValue: 140,
         yValue: 90,
         label: '고혈압 전단계',
-        color: const Color(0xFFFFEB3B), // 노란색
+        color: const Color(0xFFffc219), // 노란색
       ),
       PressureRange(
         minValue: 0,
         maxValue: 130,
         yValue: 85,
         label: '주의혈압',
-        color: const Color(0xFF8BC34A), // 연두색
+        color: const Color(0xFFa5d610), // 연두색
       ),
       PressureRange(
         minValue: 0,
         maxValue: 120,
         yValue: 80, // Y축 값 추가
         label: '정상',
-        color: const Color(0xFF4CAF50), // 초록색
+        color: const Color(0xFF62ba0b), // 초록색
       ),
       PressureRange(
         minValue: 0,
         maxValue: 90,
         yValue: 60, // Y축 값 추가
         label: '저혈압',
-        color: const Color(0xFF2196F3), // 파란색
+        color: const Color(0xFF1e92df), // 파란색
       ),
     ];
   }
