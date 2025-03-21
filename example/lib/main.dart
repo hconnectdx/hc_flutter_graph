@@ -1,5 +1,6 @@
 import 'package:example/graph_screen/blood_pressure_graph_screen.dart';
 import 'package:example/graph_screen/blood_pressure_range_screen.dart';
+import 'package:example/graph_screen/gauge_chart_screen.dart';
 import 'package:example/graph_screen/grip_strength_graph_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:hc_flutter_graph/blood_pressure_chart.dart';
@@ -95,6 +96,23 @@ class HomeScreen extends StatelessWidget {
                 );
               },
               child: const Text('혈압 범위 그래프'),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 40,
+                  vertical: 15,
+                ),
+                textStyle: const TextStyle(fontSize: 18),
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => GaugeChartScreen()),
+                );
+              },
+              child: const Text('게이지 차트'),
             ),
           ],
         ),
