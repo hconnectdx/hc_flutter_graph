@@ -861,7 +861,7 @@ class BloodPressureRangePainter extends CustomPainter {
       double value = rangeValues[i];
 
       // 0 값은 표시하지 않음
-      if (value == 0) continue;
+      if (value == 0 || value == 40) continue;
 
       // 값의 상대적 위치 계산 - 수정된 매핑 함수 사용
       final double y = mapYValueToPixel(value) - 20; // 텍스트 위치 조정을 위한 오프셋
@@ -982,9 +982,9 @@ class BloodPressureRangePainter extends CustomPainter {
       // 비례 좌표 계산에 수정된 매핑 함수 사용
       final double xPos = mapXValueToPixel(xValue, chartLeft, chartWidth);
 
-      // 최대값(마지막 값)인 경우 "최대"로 표시
+      // 최대값(마지막 값)인 경우 "최고"로 표시
       String displayText =
-          (i == xValues.length - 1) ? "최대" : xValue.toStringAsFixed(0);
+          (i == xValues.length - 1) ? "최고" : xValue.toStringAsFixed(0);
 
       _drawText(
         canvas: canvas,
