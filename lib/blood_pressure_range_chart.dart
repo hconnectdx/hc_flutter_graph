@@ -54,6 +54,24 @@ class BloodPressureRangeChart extends StatefulWidget {
   /// 이 값이 클수록 차트 영역이 높아집니다. 기본값은 0.7입니다.
   final double chartHeightRatio;
 
+  /// Y축 값 표시 여부
+  ///
+  /// true이면 Y축 값을 표시하고, false이면 숨깁니다.
+  /// 기본값은 true입니다.
+  final bool showYAxisValues;
+
+  /// Y축 값의 오프셋
+  ///
+  /// Y축 값 위치를 위아래로 조정합니다. 양수 값은 아래로, 음수 값은 위로 이동합니다.
+  /// 기본값은 0.0입니다.
+  final double yOffset;
+
+  /// 특정 Y축 값을 숨길 목록
+  ///
+  /// 이 목록에 포함된 Y축 값들은 차트에 표시되지 않습니다.
+  /// 기본값은 빈 리스트입니다.
+  final List<double> hideSpecificYValues;
+
   const BloodPressureRangeChart({
     Key? key,
     required this.ranges,
@@ -73,6 +91,9 @@ class BloodPressureRangeChart extends StatefulWidget {
     ], // 기본값 설정
     this.aspectRatio = 2.0, // 기본 가로 세로 비율
     this.chartHeightRatio = 0.7, // 기본 차트 높이 비율
+    this.showYAxisValues = true, // Y축 값 표시 여부
+    this.yOffset = 0.0, // Y축 값 오프셋 기본값
+    this.hideSpecificYValues = const [], // 특정 Y축 값 숨김 기본값
   }) : super(key: key);
 
   /// 기본 샘플 범위를 사용하여 차트를 생성하는 편의 생성자
@@ -96,6 +117,9 @@ class BloodPressureRangeChart extends StatefulWidget {
     ],
     double aspectRatio = 2.0,
     double chartHeightRatio = 0.7,
+    bool showYAxisValues = true,
+    double yOffset = 0.0,
+    List<double> hideSpecificYValues = const [],
   }) {
     return BloodPressureRangeChart(
       key: key,
@@ -108,6 +132,9 @@ class BloodPressureRangeChart extends StatefulWidget {
       rangeCoordinates: rangeCoordinates,
       aspectRatio: aspectRatio,
       chartHeightRatio: chartHeightRatio,
+      showYAxisValues: showYAxisValues,
+      yOffset: yOffset,
+      hideSpecificYValues: hideSpecificYValues,
     );
   }
 
@@ -194,6 +221,9 @@ class _BloodPressureRangeChartState extends State<BloodPressureRangeChart> {
               maxYValue: _maxYValue,
               rangeCoordinates: widget.rangeCoordinates,
               chartHeightRatio: widget.chartHeightRatio,
+              showYAxisValues: widget.showYAxisValues,
+              yOffset: widget.yOffset,
+              hideSpecificYValues: widget.hideSpecificYValues,
             ),
           ),
         ),
@@ -258,6 +288,9 @@ class BloodPressureRangePainter extends CustomPainter {
   final double maxYValue;
   final List<double> rangeCoordinates; // 혈압 좌표 범위 추가
   final double chartHeightRatio; // 차트 영역 높이 비율
+  final bool showYAxisValues; // Y축 값 표시 여부
+  final double yOffset; // Y축 값의 오프셋
+  final List<double> hideSpecificYValues; // 특정 Y축 값을 숨길 목록
 
   BloodPressureRangePainter({
     required this.ranges,
@@ -268,6 +301,9 @@ class BloodPressureRangePainter extends CustomPainter {
     required this.maxYValue,
     required this.rangeCoordinates,
     this.chartHeightRatio = 0.7,
+    this.showYAxisValues = true,
+    this.yOffset = 0.0,
+    this.hideSpecificYValues = const [],
   });
 
   @override
@@ -402,10 +438,11 @@ class BloodPressureRangePainter extends CustomPainter {
 
     final double xValueRange = maxXValue - minXValue;
 
-    // 차트 왼쪽 여백 (최저 텍스트 공간)
-    const double leftPadding = 100;
+    // Y축 값 표시 여부에 따라 좌측 여백 조정
+    final double leftPadding =
+        showYAxisValues ? 100.0 : 30.0; // Y축 값이 없으면 좌측 여백 줄임
     // 차트 오른쪽 여백 (최고 텍스트 공간)
-    const double rightPadding = 60;
+    const double rightPadding = 10.0; // 최소 여백으로 줄임
 
     // 차트 그리기 영역 계산
     final double chartLeft = leftPadding;
@@ -442,11 +479,15 @@ class BloodPressureRangePainter extends CustomPainter {
       final range = sortedRanges[i];
 
       // 범위의 픽셀 위치 계산 (X축) - 수정된 매핑 함수 사용
-      final double rangeEndX = mapXValueToPixel(
-        range.maxValue,
-        chartLeft,
-        chartWidth,
-      );
+      double rangeEndX;
+
+      // 가장 높은 값의 범위(제2기 고혈압)는 우측 끝까지 확장
+      if (i == 0) {
+        rangeEndX = chartRight;
+      } else {
+        rangeEndX = mapXValueToPixel(range.maxValue, chartLeft, chartWidth);
+      }
+
       final double rangeWidth = rangeEndX - chartLeft;
 
       // Y값을 기준으로 높이 계산 (Y축) - 수정된 매핑 함수 사용
@@ -494,18 +535,22 @@ class BloodPressureRangePainter extends CustomPainter {
       maxXValue,
     );
 
-    // 중요: Y축 값을 그래프 그리기 전에 먼저 그려서 겹치지 않도록 함
-    _drawYAxisValues(
-      canvas,
-      chartTop,
-      chartHeight,
-      chartLeft,
-      minYValue,
-      maxYValue,
-      rangeValues,
-      totalRanges,
-      heightPerRange,
-    );
+    // Y축 값 그리기 (showYAxisValues가 true인 경우에만)
+    if (showYAxisValues) {
+      _drawYAxisValues(
+        canvas,
+        chartTop,
+        chartHeight,
+        chartLeft,
+        minYValue,
+        maxYValue,
+        rangeValues,
+        totalRanges,
+        heightPerRange,
+        yOffset,
+        hideSpecificYValues,
+      );
+    }
 
     // 현재 값 표시 - X축 위치 계산 - 수정된 매핑 함수 사용
     final double currentX = mapXValueToPixel(
@@ -644,10 +689,13 @@ class BloodPressureRangePainter extends CustomPainter {
         y = mapYValueToPixel(midValue);
       }
 
+      // 좌측 패딩을 24픽셀로 변경
+      final double textLeftPadding = 24.0;
+
       _drawText(
         canvas: canvas,
         text: range.label,
-        position: Offset(chartLeft + 20, y),
+        position: Offset(chartLeft + textLeftPadding, y),
         fontSize: 30,
         color: Colors.white,
         fontWeight: FontWeight.bold,
@@ -704,6 +752,52 @@ class BloodPressureRangePainter extends CustomPainter {
     required double fontSize,
     double triangleHeight = 10,
   }) {
+    // 말풍선 그림자 먼저 그리기
+    final bubbleShadowPaint =
+        Paint()
+          ..color = Colors.black.withOpacity(0.3)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+
+    // 그림자용 경로 만들기 (몸체 + 삼각형)
+    final Path shadowPath = Path();
+
+    // 그림자 위치 약간 오프셋 적용 (아래로 3픽셀, 오른쪽으로 3픽셀)
+    final shadowOffset = 3.0;
+
+    // 그림자 몸체 - 둥근 모서리 직사각형
+    final RRect shadowRect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(
+        position.dx - bubbleWidth / 2 + shadowOffset,
+        position.dy - bubbleHeight / 2 + shadowOffset,
+        bubbleWidth,
+        bubbleHeight,
+      ),
+      const Radius.circular(60),
+    );
+
+    // 그림자 몸체 추가
+    shadowPath.addRRect(shadowRect);
+
+    // 그림자 삼각형 부분 추가
+    final double shadowTriangleWidth = 20.0; // 삼각형 너비
+    final double shadowTriangleTop =
+        position.dy + bubbleHeight / 2 + shadowOffset;
+    final double shadowTriangleBottom = shadowTriangleTop + triangleHeight;
+
+    // 삼각형 경로
+    shadowPath.moveTo(
+      position.dx - shadowTriangleWidth / 2 + shadowOffset,
+      shadowTriangleTop,
+    );
+    shadowPath.lineTo(position.dx + shadowOffset, shadowTriangleBottom);
+    shadowPath.lineTo(
+      position.dx + shadowTriangleWidth / 2 + shadowOffset,
+      shadowTriangleTop,
+    );
+
+    // 그림자 그리기
+    canvas.drawPath(shadowPath, bubbleShadowPaint);
+
     // 말풍선 그리기
     final bubblePaint =
         Paint()
@@ -739,9 +833,6 @@ class BloodPressureRangePainter extends CustomPainter {
 
     // 말풍선 배경 그리기
     canvas.drawPath(bubblePath, bubblePaint);
-
-    // 테두리 제거 (주석 처리)
-    // canvas.drawPath(bubblePath, bubbleBorderPaint);
 
     // 텍스트 그리기 - 색상을 #666666으로 변경
     _drawText(
@@ -829,6 +920,8 @@ class BloodPressureRangePainter extends CustomPainter {
     List<double> rangeValues,
     int totalRanges,
     double heightPerRange,
+    double yOffset,
+    List<double> hideSpecificYValues,
   ) {
     // Y값을 픽셀 위치로 매핑하는 함수 추가 - 외부 함수에 접근하기 위한 클로저
     double mapYValueToPixel(double yValue) {
@@ -856,6 +949,12 @@ class BloodPressureRangePainter extends CustomPainter {
       return startY - (ratioInRange * (startY - endY));
     }
 
+    // 각 범위의 Y값과 hideYValue 상태를 매핑하는 맵 생성
+    Map<double, bool> hideValueMap = {};
+    for (var range in ranges) {
+      hideValueMap[range.yValue] = range.hideYValue;
+    }
+
     // 지정된 값들을 사용
     for (int i = 0; i < rangeValues.length; i++) {
       double value = rangeValues[i];
@@ -863,8 +962,18 @@ class BloodPressureRangePainter extends CustomPainter {
       // 0 값은 표시하지 않음
       if (value == 0 || value == 40) continue;
 
+      // hideYValue가 true인 값은 표시하지 않음 (해당 값이 맵에 있는 경우)
+      if (hideValueMap.containsKey(value) && hideValueMap[value] == true)
+        continue;
+
+      // hideSpecificYValues에 포함된 값은 표시하지 않음
+      if (hideSpecificYValues.contains(value)) continue;
+
       // 값의 상대적 위치 계산 - 수정된 매핑 함수 사용
-      final double y = mapYValueToPixel(value) - 20; // 텍스트 위치 조정을 위한 오프셋
+      final double y = mapYValueToPixel(value);
+
+      // yOffset 값 적용 (yOffset 값만큼 위치 조정)
+      final double yPos = y + yOffset;
 
       // 가장 높은 값(마지막 값)인 경우 "최저"로 표시
       String displayText =
@@ -874,7 +983,7 @@ class BloodPressureRangePainter extends CustomPainter {
       _drawText(
         canvas: canvas,
         text: displayText,
-        position: Offset(15, y),
+        position: Offset(15, yPos),
         fontSize: 30,
         color: Colors.grey,
         alignment: Alignment.centerRight,
@@ -979,17 +1088,27 @@ class BloodPressureRangePainter extends CustomPainter {
       // 0 값은 표시하지 않음
       if (xValue == 0) continue;
 
-      // 비례 좌표 계산에 수정된 매핑 함수 사용
-      final double xPos = mapXValueToPixel(xValue, chartLeft, chartWidth);
-
       // 최대값(마지막 값)인 경우 "최고"로 표시
       String displayText =
           (i == xValues.length - 1) ? "최고" : xValue.toStringAsFixed(0);
 
+      // X축 값 위치 계산 및 조정
+      double xPos;
+      double textOffset = -15.0; // 기본 좌측 오프셋
+
+      if (i == xValues.length - 1) {
+        // 마지막 값("최고")은 차트 오른쪽 끝에 배치
+        xPos = chartRight;
+        textOffset = -30.0; // 최고 텍스트는 더 왼쪽으로 이동
+      } else {
+        // 나머지 값들은 각 범위의 maxValue 위치에 배치
+        xPos = mapXValueToPixel(xValue, chartLeft, chartWidth);
+      }
+
       _drawText(
         canvas: canvas,
         text: displayText,
-        position: Offset(xPos, chartBottom + 30),
+        position: Offset(xPos + textOffset, chartBottom + 30),
         fontSize: 30,
         color: const Color(0xFF999999),
         fontWeight: FontWeight.normal,
@@ -1006,7 +1125,10 @@ class BloodPressureRangePainter extends CustomPainter {
         oldDelegate.yAxisValue != yAxisValue ||
         oldDelegate.minYValue != minYValue ||
         oldDelegate.maxYValue != maxYValue ||
-        oldDelegate.rangeCoordinates != rangeCoordinates;
+        oldDelegate.rangeCoordinates != rangeCoordinates ||
+        oldDelegate.showYAxisValues != showYAxisValues ||
+        oldDelegate.yOffset != yOffset ||
+        oldDelegate.hideSpecificYValues != hideSpecificYValues;
   }
 }
 
@@ -1016,6 +1138,7 @@ class PressureRange {
   final String label;
   final Color color;
   final double yValue; // Y축 값 추가
+  final bool hideYValue; // Y축 값을 숨길지 여부
 
   PressureRange({
     required this.minValue,
@@ -1023,6 +1146,7 @@ class PressureRange {
     required this.label,
     required this.color,
     required this.yValue, // Y축 값 필수 파라미터로 추가
+    this.hideYValue = false, // 기본값은 false (표시)
   });
 
   // 예제 데이터 생성
@@ -1041,6 +1165,7 @@ class PressureRange {
         label: '제1기 고혈압',
         color: const Color(0xFFf97901), // 주황색
         yValue: 100, // Y축 값 추가
+        hideYValue: false, // 이 값은 표시
       ),
       PressureRange(
         minValue: 0,
@@ -1055,6 +1180,7 @@ class PressureRange {
         yValue: 85,
         label: '주의혈압',
         color: const Color(0xFFa5d610), // 연두색
+        hideYValue: false, // 이 값은 표시되도록 변경
       ),
       PressureRange(
         minValue: 0,
