@@ -4,12 +4,14 @@ class BloodPressureChart extends StatelessWidget {
   final List<BloodPressureData> data;
   final double spacingFactor;
   final double height;
+  final bool isDarkMode;
 
   const BloodPressureChart({
     super.key,
     required this.data,
     this.spacingFactor = 0.85,
     this.height = 300,
+    this.isDarkMode = false,
   });
 
   @override
@@ -25,6 +27,7 @@ class BloodPressureChart extends StatelessWidget {
               data,
               showGridValues: false,
               spacingFactor: spacingFactor,
+              isDarkMode: isDarkMode,
             ),
           ),
         ),
@@ -42,7 +45,10 @@ class BloodPressureChart extends StatelessWidget {
         _legendItem(Colors.green, "정상"),
         _legendItem(Colors.orange, "주의혈압"),
         _legendItem(Colors.red, "고혈압"),
-        _legendItem(Colors.black, "맥박(bpm)"),
+        _legendItem(
+          isDarkMode ? const Color(0xFF4A4F5A) : Colors.black,
+          "맥박(bpm)",
+        ),
       ],
     );
   }
@@ -55,7 +61,13 @@ class BloodPressureChart extends StatelessWidget {
           child: Container(width: 24, height: 24, color: color),
         ),
         const SizedBox(width: 9),
-        Text(label, style: TextStyle(fontSize: 30)),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 30,
+            color: isDarkMode ? Colors.white : Colors.black,
+          ),
+        ),
       ],
     );
   }
@@ -65,11 +77,13 @@ class BloodPressureChartPainter extends CustomPainter {
   final List<BloodPressureData> data;
   final bool showGridValues;
   final double spacingFactor;
+  final bool isDarkMode;
 
   BloodPressureChartPainter(
     this.data, {
     this.showGridValues = false,
     this.spacingFactor = 0.85,
+    this.isDarkMode = false,
   });
 
   @override
@@ -158,7 +172,10 @@ class BloodPressureChartPainter extends CustomPainter {
     double pointSpacing,
     double startX,
   ) {
-    final textStyle = TextStyle(color: Colors.black, fontSize: 30);
+    final textStyle = TextStyle(
+      color: isDarkMode ? Colors.white : Colors.black,
+      fontSize: 30,
+    );
     final textPainter = TextPainter(textDirection: TextDirection.ltr);
 
     // 최대 혈압 값 계산
@@ -199,16 +216,16 @@ class BloodPressureChartPainter extends CustomPainter {
   ) {
     final linePaint =
         Paint()
-          ..color = Colors.black
+          ..color = isDarkMode ? const Color(0xFF4A4F5A) : Colors.black
           ..strokeWidth = 5
           ..style = PaintingStyle.stroke;
 
     final circlePaint =
         Paint()
-          ..color = Colors.black
+          ..color = isDarkMode ? const Color(0xFF4A4F5A) : Colors.black
           ..style = PaintingStyle.fill;
 
-    final textStyle = const TextStyle(
+    final textStyle = TextStyle(
       color: Colors.white,
       fontSize: 30,
       fontWeight: FontWeight.bold,
@@ -336,7 +353,10 @@ class BloodPressureChartPainter extends CustomPainter {
     double height,
     double startX,
   ) {
-    final textStyle = TextStyle(color: Colors.grey, fontSize: 30);
+    final textStyle = TextStyle(
+      color: const Color(0xFF999999), // 항상 #999999 색상 사용
+      fontSize: 30,
+    );
     final textPainter = TextPainter(textDirection: TextDirection.ltr);
 
     for (int i = 0; i < data.length; i++) {
@@ -365,7 +385,8 @@ class BloodPressureChartPainter extends CustomPainter {
   bool shouldRepaint(BloodPressureChartPainter oldDelegate) {
     return oldDelegate.data != data ||
         oldDelegate.showGridValues != showGridValues ||
-        oldDelegate.spacingFactor != spacingFactor;
+        oldDelegate.spacingFactor != spacingFactor ||
+        oldDelegate.isDarkMode != isDarkMode;
   }
 }
 

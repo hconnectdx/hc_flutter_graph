@@ -51,6 +51,7 @@ class BloodPressureScreen extends StatelessWidget {
           children: [
             BloodPressureChart(
               data: data,
+              isDarkMode: true,
               height: MediaQuery.of(context).size.height * 0.6,
             ),
           ],
