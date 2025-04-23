@@ -7,6 +7,13 @@ class LinearChart extends StatefulWidget {
   final String chartTitle;
   final double height;
   final bool isDarkMode;
+  // 추가 레전드 타이틀 파라미터
+  final String? secondLegendLabel;
+  final String? thirdLegendLabel;
+  // gone 처리 옵션
+  final bool showFirstLegend;
+  final bool showSecondLegend;
+  final bool showThirdLegend;
 
   const LinearChart({
     super.key,
@@ -16,6 +23,11 @@ class LinearChart extends StatefulWidget {
     this.chartTitle = "타이틀을 입력하세요",
     this.height = 300,
     this.isDarkMode = false,
+    this.secondLegendLabel, // 두 번째 레전드 라벨 (null이면 표시되지 않음)
+    this.thirdLegendLabel, // 세 번째 레전드 라벨 (null이면 표시되지 않음)
+    this.showFirstLegend = true,
+    this.showSecondLegend = true,
+    this.showThirdLegend = true,
   });
 
   @override
@@ -23,8 +35,33 @@ class LinearChart extends StatefulWidget {
 }
 
 class _LinearChartState extends State<LinearChart> {
-  bool _showMyStrength = true;
-  bool _showAverageStrength = true;
+  late bool _showFirstLegend;
+  late bool _showSecondLegend;
+  late bool _showThirdLegend;
+
+  @override
+  void initState() {
+    super.initState();
+    // 초기값을 위젯 파라미터에서 설정
+    _showFirstLegend = widget.showFirstLegend;
+    _showSecondLegend = widget.showSecondLegend;
+    _showThirdLegend = widget.showThirdLegend;
+  }
+
+  @override
+  void didUpdateWidget(covariant LinearChart oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // 위젯이 업데이트될 때 속성값 갱신
+    if (oldWidget.showFirstLegend != widget.showFirstLegend) {
+      _showFirstLegend = widget.showFirstLegend;
+    }
+    if (oldWidget.showSecondLegend != widget.showSecondLegend) {
+      _showSecondLegend = widget.showSecondLegend;
+    }
+    if (oldWidget.showThirdLegend != widget.showThirdLegend) {
+      _showThirdLegend = widget.showThirdLegend;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,8 +91,8 @@ class _LinearChartState extends State<LinearChart> {
               widget.data,
               showGridValues: false,
               spacingFactor: widget.spacingFactor,
-              showMyStrength: _showMyStrength,
-              showAverageStrength: _showAverageStrength,
+              showMyStrength: true,
+              showAverageStrength: _showFirstLegend,
               isDarkMode: widget.isDarkMode,
             ),
           ),
@@ -72,17 +109,70 @@ class _LinearChartState extends State<LinearChart> {
     // 레전드 사각형 색상 - 다크모드일때 4A4F5A로 수정
     Color legendBoxColor =
         widget.isDarkMode ? const Color(0xFF4A4F5A) : Colors.black;
+    // 추가 레전드 색상
+    Color secondLegendColor = const Color(0xFFEF193D);
+    Color thirdLegendColor = const Color(0xFF1E92DF);
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
+        // 두 번째 레전드 (secondLegendLabel이 제공된 경우에만 표시)
+        if (widget.secondLegendLabel != null)
+          Padding(
+            padding: const EdgeInsets.only(left: 24.0),
+            child: Opacity(
+              opacity: _showSecondLegend ? 1.0 : 0.5,
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _showSecondLegend = !_showSecondLegend;
+                  });
+                },
+                child: _legendItem(
+                  secondLegendColor,
+                  widget.secondLegendLabel!,
+                  legendTextColor,
+                ),
+              ),
+            ),
+          ),
+
+        // 세 번째 레전드 (thirdLegendLabel이 제공된 경우에만 표시)
+        if (widget.thirdLegendLabel != null)
+          Padding(
+            padding: const EdgeInsets.only(left: 24.0),
+            child: Opacity(
+              opacity: _showThirdLegend ? 1.0 : 0.5,
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _showThirdLegend = !_showThirdLegend;
+                  });
+                },
+                child: _legendItem(
+                  thirdLegendColor,
+                  widget.thirdLegendLabel!,
+                  legendTextColor,
+                ),
+              ),
+            ),
+          ),
+
+        // 첫 번째 레전드 (항상 표시)
         const SizedBox(width: 36),
         Opacity(
-          opacity: _showAverageStrength ? 1.0 : 0.5,
-          child: _legendItem(
-            legendBoxColor,
-            widget.legendLabel,
-            legendTextColor,
+          opacity: _showFirstLegend ? 1.0 : 0.5,
+          child: GestureDetector(
+            onTap: () {
+              setState(() {
+                _showFirstLegend = !_showFirstLegend;
+              });
+            },
+            child: _legendItem(
+              legendBoxColor,
+              widget.legendLabel,
+              legendTextColor,
+            ),
           ),
         ),
       ],

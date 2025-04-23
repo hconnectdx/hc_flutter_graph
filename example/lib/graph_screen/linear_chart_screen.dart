@@ -26,9 +26,11 @@ class GripStrengthExample extends StatelessWidget {
           children: [
             Expanded(
               child: LinearChart(
-                isDarkMode: true,
+                isDarkMode: false,
                 data: data,
                 legendLabel: "평균 값",
+                secondLegendLabel: "asd'sdf",
+                thirdLegendLabel: "asdasd",
                 height:
                     MediaQuery.of(context).size.height * 0.6, // 화면 높이의 60%로 설정
               ),
