@@ -6,6 +6,7 @@ class LinearChart extends StatefulWidget {
   final String legendLabel;
   final String chartTitle;
   final double height;
+  final bool isDarkMode;
 
   const LinearChart({
     super.key,
@@ -14,6 +15,7 @@ class LinearChart extends StatefulWidget {
     this.legendLabel = "레전드를 입력하세요",
     this.chartTitle = "타이틀을 입력하세요",
     this.height = 300,
+    this.isDarkMode = false,
   });
 
   @override
@@ -26,6 +28,9 @@ class _LinearChartState extends State<LinearChart> {
 
   @override
   Widget build(BuildContext context) {
+    // Use dark mode dependent colors
+    Color titleColor = widget.isDarkMode ? Colors.white : Colors.black;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -34,10 +39,10 @@ class _LinearChartState extends State<LinearChart> {
             padding: const EdgeInsets.only(left: 16.0, bottom: 8.0),
             child: Text(
               widget.chartTitle,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 42,
                 fontWeight: FontWeight.bold,
-                color: Colors.black,
+                color: titleColor,
               ),
             ),
           ),
@@ -51,6 +56,7 @@ class _LinearChartState extends State<LinearChart> {
               spacingFactor: widget.spacingFactor,
               showMyStrength: _showMyStrength,
               showAverageStrength: _showAverageStrength,
+              isDarkMode: widget.isDarkMode,
             ),
           ),
         ),
@@ -61,27 +67,37 @@ class _LinearChartState extends State<LinearChart> {
   }
 
   Widget _buildLegend() {
+    // Use dark mode dependent colors for legend text
+    Color legendTextColor = widget.isDarkMode ? Colors.white : Colors.black;
+    // 레전드 사각형 색상 - 다크모드일때 4A4F5A로 수정
+    Color legendBoxColor =
+        widget.isDarkMode ? const Color(0xFF4A4F5A) : Colors.black;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         const SizedBox(width: 36),
         Opacity(
           opacity: _showAverageStrength ? 1.0 : 0.5,
-          child: _legendItem(Colors.black, widget.legendLabel),
+          child: _legendItem(
+            legendBoxColor,
+            widget.legendLabel,
+            legendTextColor,
+          ),
         ),
       ],
     );
   }
 
-  Widget _legendItem(Color color, String label) {
+  Widget _legendItem(Color boxColor, String label, Color textColor) {
     return Row(
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(9),
-          child: Container(width: 24, height: 24, color: color),
+          child: Container(width: 24, height: 24, color: boxColor),
         ),
         const SizedBox(width: 9),
-        Text(label, style: const TextStyle(fontSize: 30)),
+        Text(label, style: TextStyle(fontSize: 30, color: textColor)),
       ],
     );
   }
@@ -93,7 +109,13 @@ class GripStrengthChartPainter extends CustomPainter {
   final double spacingFactor;
   final bool showMyStrength;
   final bool showAverageStrength;
+  final bool isDarkMode;
   late final double averageValue;
+
+  // Colors for dark mode
+  late final Color _referenceLineColor;
+  late final Color _dateColor;
+  late final Color _gridLineColor;
 
   GripStrengthChartPainter(
     this.data, {
@@ -101,9 +123,16 @@ class GripStrengthChartPainter extends CustomPainter {
     this.spacingFactor = 0.85,
     this.showMyStrength = true,
     this.showAverageStrength = true,
+    this.isDarkMode = false,
   }) {
     // 데이터의 평균값 계산
     averageValue = _calculateAverage();
+
+    // Initialize colors based on mode
+    _referenceLineColor = isDarkMode ? const Color(0xFF4A4F5A) : Colors.black;
+    _dateColor = isDarkMode ? const Color(0xFF999999) : const Color(0xFF666666);
+    _gridLineColor =
+        isDarkMode ? const Color(0xFF2C3036) : const Color(0xFFF4F4F4);
   }
 
   // 데이터의 평균값 계산 메서드
@@ -191,7 +220,7 @@ class GripStrengthChartPainter extends CustomPainter {
   void _drawGridLines(Canvas canvas, Size size, double chartHeight) {
     final paint =
         Paint()
-          ..color = Colors.grey.withOpacity(0.3)
+          ..color = _gridLineColor
           ..strokeWidth = 1;
 
     // 최대 값 계산 (10의 배수로 올림)
@@ -209,7 +238,10 @@ class GripStrengthChartPainter extends CustomPainter {
     final double valueRange = maxValue - minValue;
 
     // 텍스트 스타일 설정
-    final textStyle = TextStyle(color: Colors.grey, fontSize: 12);
+    final textStyle = TextStyle(
+      color: isDarkMode ? Colors.grey[400] : Colors.grey,
+      fontSize: 12,
+    );
     final textPainter = TextPainter(textDirection: TextDirection.ltr);
 
     // 6개의 그리드 라인 그리기
@@ -252,7 +284,7 @@ class GripStrengthChartPainter extends CustomPainter {
     // Draw dashed line
     final paint =
         Paint()
-          ..color = Colors.black
+          ..color = _referenceLineColor
           ..strokeWidth =
               3.5 // 선 두께 증가
           ..style = PaintingStyle.stroke;
@@ -304,7 +336,7 @@ class GripStrengthChartPainter extends CustomPainter {
     // Draw reference value background
     final backgroundPaint =
         Paint()
-          ..color = Colors.black
+          ..color = _referenceLineColor
           ..style = PaintingStyle.fill;
 
     // 사각형 그리기 (radius 없음)
@@ -428,7 +460,7 @@ class GripStrengthChartPainter extends CustomPainter {
     double height,
     double startX,
   ) {
-    final textStyle = const TextStyle(color: Colors.grey, fontSize: 30);
+    final textStyle = TextStyle(color: _dateColor, fontSize: 30);
     final textPainter = TextPainter(textDirection: TextDirection.ltr);
 
     for (int i = 0; i < data.length; i++) {
@@ -446,7 +478,8 @@ class GripStrengthChartPainter extends CustomPainter {
         oldDelegate.showGridValues != showGridValues ||
         oldDelegate.spacingFactor != spacingFactor ||
         oldDelegate.showMyStrength != showMyStrength ||
-        oldDelegate.showAverageStrength != showAverageStrength;
+        oldDelegate.showAverageStrength != showAverageStrength ||
+        oldDelegate.isDarkMode != isDarkMode;
   }
 }
 

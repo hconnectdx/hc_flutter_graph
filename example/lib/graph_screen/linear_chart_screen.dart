@@ -26,6 +26,7 @@ class GripStrengthExample extends StatelessWidget {
           children: [
             Expanded(
               child: LinearChart(
+                isDarkMode: true,
                 data: data,
                 legendLabel: "평균 값",
                 height:
