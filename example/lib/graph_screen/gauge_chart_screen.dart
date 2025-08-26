@@ -70,6 +70,7 @@ class GaugeChartScreen extends StatelessWidget {
               ),
               labelTextStyle: const TextStyle(fontSize: 16, color: Colors.grey),
               textYOffset: -140,
+              fontFamily: 'SpoqaHanSansNeo',
             ),
           ],
         ),

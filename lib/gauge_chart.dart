@@ -1,4 +1,5 @@
 import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 class GaugeChart extends StatefulWidget {
@@ -68,6 +69,9 @@ class GaugeChart extends StatefulWidget {
   /// 텍스트 위치 Y축 오프셋 (라벨과 값 모두에 적용됨)
   final double textYOffset;
 
+  /// 텍스트에 적용할 폰트 패밀리 (null이면 기본 시스템 폰트 사용)
+  final String? fontFamily;
+
   const GaugeChart({
     Key? key,
     required this.value,
@@ -92,6 +96,7 @@ class GaugeChart extends StatefulWidget {
     this.onDecimalPlacesChanged,
     this.showControls = false,
     this.textYOffset = -90,
+    this.fontFamily,
   }) : super(key: key);
 
   @override
@@ -176,22 +181,22 @@ class _GaugeChartState extends State<GaugeChart> {
                 pointerThickness: widget.pointerThickness,
                 pointerLength: widget.pointerLength,
                 thickness: widget.thickness,
-                valueTextStyle:
-                    widget.valueTextStyle ??
-                    const TextStyle(
-                      color: Colors.black,
-                      fontSize: 38,
-                      fontWeight: FontWeight.bold,
-                    ),
-                labelTextStyle:
-                    widget.labelTextStyle ??
-                    const TextStyle(color: Colors.grey, fontSize: 14),
-                centerLabelTextStyle:
-                    widget.centerLabelTextStyle ??
-                    const TextStyle(color: Colors.black54, fontSize: 16),
-                centerUnitTextStyle:
-                    widget.centerUnitTextStyle ??
-                    const TextStyle(color: Colors.black54, fontSize: 16),
+                valueTextStyle: (widget.valueTextStyle ??
+                        const TextStyle(
+                          color: Colors.black,
+                          fontSize: 38,
+                          fontWeight: FontWeight.bold,
+                        ))
+                    .copyWith(fontFamily: widget.fontFamily),
+                labelTextStyle: (widget.labelTextStyle ??
+                        const TextStyle(color: Colors.grey, fontSize: 14))
+                    .copyWith(fontFamily: widget.fontFamily),
+                centerLabelTextStyle: (widget.centerLabelTextStyle ??
+                        const TextStyle(color: Colors.black54, fontSize: 16))
+                    .copyWith(fontFamily: widget.fontFamily),
+                centerUnitTextStyle: (widget.centerUnitTextStyle ??
+                        const TextStyle(color: Colors.black54, fontSize: 16))
+                    .copyWith(fontFamily: widget.fontFamily),
                 centerLabel: _centerLabel,
                 unit: _unit,
                 decimalPlaces: _decimalPlaces,
