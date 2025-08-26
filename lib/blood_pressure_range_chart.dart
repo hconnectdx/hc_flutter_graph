@@ -22,6 +22,7 @@ class BloodPressureRangeChart extends StatefulWidget {
   final List<PressureRange> ranges;
   final String currentValueLabel;
   final List<double> yAxisRange; // Y축 범위 추가
+  final String? fontFamily;
 
   /// X축 포인터 위치를 지정하는 값
   ///
@@ -94,6 +95,7 @@ class BloodPressureRangeChart extends StatefulWidget {
     this.showYAxisValues = true, // Y축 값 표시 여부
     this.yOffset = 0.0, // Y축 값 오프셋 기본값
     this.hideSpecificYValues = const [], // 특정 Y축 값 숨김 기본값
+    this.fontFamily,
   }) : super(key: key);
 
   /// 기본 샘플 범위를 사용하여 차트를 생성하는 편의 생성자
@@ -120,6 +122,7 @@ class BloodPressureRangeChart extends StatefulWidget {
     bool showYAxisValues = true,
     double yOffset = 0.0,
     List<double> hideSpecificYValues = const [],
+    String? fontFamily,
   }) {
     return BloodPressureRangeChart(
       key: key,
@@ -135,6 +138,7 @@ class BloodPressureRangeChart extends StatefulWidget {
       showYAxisValues: showYAxisValues,
       yOffset: yOffset,
       hideSpecificYValues: hideSpecificYValues,
+      fontFamily: fontFamily,
     );
   }
 
@@ -202,10 +206,11 @@ class _BloodPressureRangeChartState extends State<BloodPressureRangeChart> {
             padding: const EdgeInsets.only(left: 16.0, bottom: 8.0),
             child: Text(
               widget.chartTitle,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 30,
                 fontWeight: FontWeight.bold,
                 color: Colors.black,
+                fontFamily: widget.fontFamily,
               ),
             ),
           ),
@@ -224,6 +229,7 @@ class _BloodPressureRangeChartState extends State<BloodPressureRangeChart> {
               showYAxisValues: widget.showYAxisValues,
               yOffset: widget.yOffset,
               hideSpecificYValues: widget.hideSpecificYValues,
+              fontFamily: widget.fontFamily,
             ),
           ),
         ),
@@ -291,6 +297,7 @@ class BloodPressureRangePainter extends CustomPainter {
   final bool showYAxisValues; // Y축 값 표시 여부
   final double yOffset; // Y축 값의 오프셋
   final List<double> hideSpecificYValues; // 특정 Y축 값을 숨길 목록
+  final String? fontFamily;
 
   BloodPressureRangePainter({
     required this.ranges,
@@ -304,6 +311,7 @@ class BloodPressureRangePainter extends CustomPainter {
     this.showYAxisValues = true,
     this.yOffset = 0.0,
     this.hideSpecificYValues = const [],
+    this.fontFamily,
   });
 
   @override
@@ -421,7 +429,7 @@ class BloodPressureRangePainter extends CustomPainter {
     // 여백 추가 (최고값에만 적용)
     maxYValue = maxYValue;
 
-    final double yValueRange = maxYValue - minYValue;
+    // final double yValueRange = maxYValue - minYValue; // not used
 
     // x축 범위 계산 - ranges에서 동적으로 계산
     double minXValue = double.infinity;
@@ -436,7 +444,7 @@ class BloodPressureRangePainter extends CustomPainter {
     if (minXValue == double.infinity) minXValue = 0.0;
     if (maxXValue == 0.0) maxXValue = 200.0;
 
-    final double xValueRange = maxXValue - minXValue;
+    // final double xValueRange = maxXValue - minXValue; // not used
 
     // Y축 값 표시 여부에 따라 좌측 여백 조정
     final double leftPadding =
@@ -721,6 +729,7 @@ class BloodPressureRangePainter extends CustomPainter {
           color: color,
           fontSize: fontSize,
           fontWeight: fontWeight,
+          fontFamily: fontFamily,
         ),
       ),
       textDirection: TextDirection.ltr,
@@ -846,7 +855,7 @@ class BloodPressureRangePainter extends CustomPainter {
   }
 
   // Y축 눈금 및 격자선 그리기
-  void _drawYAxisGrids(
+  /* void _drawYAxisGrids(
     Canvas canvas,
     double chartLeft,
     double chartRight,
@@ -907,7 +916,7 @@ class BloodPressureRangePainter extends CustomPainter {
         alignment: Alignment.centerRight,
       );
     }
-  }
+  } */
 
   // Y축 값 그리기
   void _drawYAxisValues(

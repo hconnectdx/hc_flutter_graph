@@ -44,6 +44,7 @@ class _BloodPressureRangeScreenState extends State<BloodPressureRangeScreen> {
                   pointerXValue: 120,
                   pointerYValue: 60,
                   showYAxisValues: _showYAxisValues, // Y축 값 표시 여부 설정
+                  fontFamily: 'SpoqaHanSansNeo',
                 ),
 
                 const SizedBox(height: 40),
@@ -65,6 +66,7 @@ class _BloodPressureRangeScreenState extends State<BloodPressureRangeScreen> {
                     aspectRatio: 3,
                     yOffset: 0,
                     hideSpecificYValues: [80, 90],
+                    fontFamily: 'SpoqaHanSansNeo',
                   ),
                 ),
 
@@ -82,6 +84,7 @@ class _BloodPressureRangeScreenState extends State<BloodPressureRangeScreen> {
                   currentValueLabel: '나의 건강상태',
                   pointerXValue: 120,
                   pointerYValue: 80,
+                  fontFamily: 'SpoqaHanSansNeo',
                   // 커스텀 PressureRange 목록 생성 (일부는 hideYValue = true로 설정)
                   ranges: [
                     PressureRange(
