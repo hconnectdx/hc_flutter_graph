@@ -1,9 +1,9 @@
 import 'package:example/graph_screen/blood_pressure_graph_screen.dart';
 import 'package:example/graph_screen/blood_pressure_range_screen.dart';
 import 'package:example/graph_screen/gauge_chart_screen.dart';
+import 'package:example/graph_screen/horizontal_chart_screen.dart';
 import 'package:example/graph_screen/linear_chart_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:hc_flutter_graph/blood_pressure_chart.dart';
 
 void main() {
   runApp(const MyApp());
@@ -113,6 +113,25 @@ class HomeScreen extends StatelessWidget {
                 );
               },
               child: const Text('게이지 차트'),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 40,
+                  vertical: 15,
+                ),
+                textStyle: const TextStyle(fontSize: 18),
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const HorizontalChartScreen(),
+                  ),
+                );
+              },
+              child: const Text('수평 차트'),
             ),
           ],
         ),
