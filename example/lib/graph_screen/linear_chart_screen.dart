@@ -7,11 +7,11 @@ class GripStrengthExample extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final List<LinearChartData> data = [
-      LinearChartData(date: "24.12.01", value: 15),
-      LinearChartData(date: "24.12.01", value: 35.4),
-      LinearChartData(date: "24.12.01", value: 21),
-      LinearChartData(date: "24.12.01", value: 42),
-      LinearChartData(date: "24.12.01", value: 35),
+      // LinearChartData(date: "24.12.01", value: 15),
+      // LinearChartData(date: "24.12.01", value: 35.4),
+      LinearChartData(date: "24.12.01", value: 21.0),
+      LinearChartData(date: "24.12.01", value: 42.0),
+      LinearChartData(date: "24.12.01", value: 35.220),
     ];
 
     return Scaffold(
@@ -26,13 +26,17 @@ class GripStrengthExample extends StatelessWidget {
           children: [
             Expanded(
               child: LinearChart(
-                isDarkMode: false,
+                isDarkMode: true,
                 data: data,
+                leftPadding: 100,
+                rightPadding: 100,
                 legendLabel: "평균 값",
-                secondLegendLabel: "asd'sdf",
+                secondLegendLabel: "고혈압",
                 thirdLegendLabel: "asdasd",
+                averageValue: 30,
                 height:
-                    MediaQuery.of(context).size.height * 0.6, // 화면 높이의 60%로 설정
+                    MediaQuery.of(context).size.height * 0.15, // 화면 높이의 60%로 설정
+                fontFamily: 'SpoqaHanSansNeo',
               ),
             ),
           ],

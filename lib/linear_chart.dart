@@ -10,6 +10,7 @@ class LinearChart extends StatefulWidget {
   final double leftPadding;
   final double rightPadding;
   final double? averageValue;
+  final String? fontFamily;
   // 추가 레전드 타이틀 파라미터
   final String? secondLegendLabel;
   final String? thirdLegendLabel;
@@ -29,6 +30,7 @@ class LinearChart extends StatefulWidget {
     this.leftPadding = 40.0,
     this.rightPadding = 40.0,
     this.averageValue,
+    this.fontFamily,
     this.secondLegendLabel, // 두 번째 레전드 라벨 (null이면 표시되지 않음)
     this.thirdLegendLabel, // 세 번째 레전드 라벨 (null이면 표시되지 않음)
     this.showFirstLegend = true,
@@ -86,6 +88,7 @@ class _LinearChartState extends State<LinearChart> {
                 fontSize: 42,
                 fontWeight: FontWeight.bold,
                 color: titleColor,
+                fontFamily: widget.fontFamily,
               ),
             ),
           ),
@@ -103,6 +106,7 @@ class _LinearChartState extends State<LinearChart> {
               leftPadding: widget.leftPadding,
               rightPadding: widget.rightPadding,
               averageValue: widget.averageValue,
+              fontFamily: widget.fontFamily,
             ),
           ),
         ),
@@ -212,6 +216,7 @@ class GripStrengthChartPainter extends CustomPainter {
   final double leftPadding;
   final double rightPadding;
   final double? averageValue;
+  final String? fontFamily;
 
   // Colors for dark mode
   late final Color _referenceLineColor;
@@ -228,12 +233,13 @@ class GripStrengthChartPainter extends CustomPainter {
     this.leftPadding = 40.0,
     this.rightPadding = 40.0,
     this.averageValue,
+    this.fontFamily,
   }) {
     // Initialize colors based on mode
     _referenceLineColor = isDarkMode ? const Color(0xFF4A4F5A) : Colors.black;
     _dateColor = isDarkMode ? const Color(0xFF999999) : const Color(0xFF666666);
     _gridLineColor =
-        isDarkMode ? const Color(0xFF2C3036) : const Color(0xFFF4F4F4);
+        isDarkMode ? const Color(0xFF1a1c20) : const Color(0xFFf4f4f4);
   }
 
   // 평균값은 외부에서 주입받습니다.
@@ -329,7 +335,8 @@ class GripStrengthChartPainter extends CustomPainter {
     final paint =
         Paint()
           ..color = _gridLineColor
-          ..strokeWidth = 1;
+          ..strokeWidth = 1.5
+          ..isAntiAlias = true;
 
     // 최대 값 계산 (10의 배수로 올림)
     const double defaultMaxValue = 50.0;
@@ -349,6 +356,7 @@ class GripStrengthChartPainter extends CustomPainter {
     final textStyle = TextStyle(
       color: isDarkMode ? Colors.grey[400] : Colors.grey,
       fontSize: 12,
+      fontFamily: fontFamily,
     );
     final textPainter = TextPainter(textDirection: TextDirection.ltr);
 
@@ -397,16 +405,16 @@ class GripStrengthChartPainter extends CustomPainter {
               3.5 // 선 두께 증가
           ..style = PaintingStyle.stroke;
 
-    // 평균값 표시 (소수점 첫째 자리까지)
+    // 평균값 표시 (항상 소수점 첫째 자리까지)
     final double avgVal = averageValue ?? 0;
-    String avgText =
-        avgVal % 1 == 0 ? "${avgVal.toInt()}" : "${avgVal.toStringAsFixed(1)}";
+    String avgText = avgVal.toStringAsFixed(1);
 
     // 값 표시 텍스트 준비
-    final textStyle = const TextStyle(
+    final textStyle = TextStyle(
       color: Colors.white,
       fontSize: 30,
       fontWeight: FontWeight.bold,
+      fontFamily: fontFamily,
     );
     final textPainter = TextPainter(textDirection: TextDirection.ltr);
     textPainter.text = TextSpan(text: avgText, style: textStyle);
@@ -480,13 +488,13 @@ class GripStrengthChartPainter extends CustomPainter {
   ) {
     final linePaint =
         Paint()
-          ..color = Colors.blue
+          ..color = const Color(0xFF1e92df)
           ..strokeWidth = 4
           ..style = PaintingStyle.stroke;
 
     final circlePaint =
         Paint()
-          ..color = Colors.blue
+          ..color = const Color(0xFF1e92df)
           ..style = PaintingStyle.fill;
 
     // Calculate points
@@ -524,10 +532,11 @@ class GripStrengthChartPainter extends CustomPainter {
     int visibleCount,
     double firstGapExtra,
   ) {
-    final textStyle = const TextStyle(
+    final textStyle = TextStyle(
       color: Colors.white,
       fontSize: 30,
       fontWeight: FontWeight.bold,
+      fontFamily: fontFamily,
     );
     final textPainter = TextPainter(textDirection: TextDirection.ltr);
 
@@ -540,21 +549,21 @@ class GripStrengthChartPainter extends CustomPainter {
       // 가장 오른쪽(마지막) 데이터 포인트일 경우 빨간색으로, 그 외에는 파란색으로 설정
       final rectPaint =
           Paint()
-            ..color = (i == visibleCount - 1) ? Colors.red : Colors.blue
+            ..color =
+                (i == visibleCount - 1)
+                    ? const Color(0xFFef193d)
+                    : const Color(0xFF1e92df)
             ..style = PaintingStyle.fill;
 
       // 직사각형 그리기 (더 아래로 이동: y-40에서 y-25로 변경)
       final rect = RRect.fromRectAndRadius(
-        Rect.fromCenter(center: Offset(x, y - 33), width: 72, height: 38),
+        Rect.fromCenter(center: Offset(x, y - 36), width: 62 + 36, height: 38),
         const Radius.circular(40),
       );
       canvas.drawRRect(rect, rectPaint);
 
-      // 값 표시 (소수점 첫째 자리까지 표시)
-      String displayText =
-          data[i].value % 1 == 0
-              ? "${data[i].value.toInt()}"
-              : "${data[i].value.toStringAsFixed(1)}";
+      // 값 표시 (항상 소수점 첫째 자리까지 표시)
+      String displayText = data[i].value.toStringAsFixed(1);
 
       textPainter.text = TextSpan(text: displayText, style: textStyle);
       textPainter.layout();
@@ -573,7 +582,11 @@ class GripStrengthChartPainter extends CustomPainter {
     int visibleCount,
     double firstGapExtra,
   ) {
-    final textStyle = TextStyle(color: _dateColor, fontSize: 30);
+    final textStyle = TextStyle(
+      color: _dateColor,
+      fontSize: 30,
+      fontFamily: fontFamily,
+    );
     final textPainter = TextPainter(textDirection: TextDirection.ltr);
 
     for (int i = 0; i < visibleCount; i++) {
@@ -581,7 +594,7 @@ class GripStrengthChartPainter extends CustomPainter {
 
       textPainter.text = TextSpan(text: data[i].date, style: textStyle);
       textPainter.layout();
-      textPainter.paint(canvas, Offset(x - textPainter.width / 2, height + 10));
+      textPainter.paint(canvas, Offset(x - textPainter.width / 2, height + 13));
     }
   }
 
