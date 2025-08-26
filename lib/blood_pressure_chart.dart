@@ -5,6 +5,7 @@ class BloodPressureChart extends StatelessWidget {
   final double spacingFactor;
   final double height;
   final bool isDarkMode;
+  final String? fontFamily;
 
   const BloodPressureChart({
     super.key,
@@ -12,6 +13,7 @@ class BloodPressureChart extends StatelessWidget {
     this.spacingFactor = 0.85,
     this.height = 300,
     this.isDarkMode = false,
+    this.fontFamily,
   });
 
   @override
@@ -28,6 +30,7 @@ class BloodPressureChart extends StatelessWidget {
               showGridValues: false,
               spacingFactor: spacingFactor,
               isDarkMode: isDarkMode,
+              fontFamily: fontFamily,
             ),
           ),
         ),
@@ -66,6 +69,7 @@ class BloodPressureChart extends StatelessWidget {
           style: TextStyle(
             fontSize: 30,
             color: isDarkMode ? Colors.white : Colors.black,
+            fontFamily: fontFamily,
           ),
         ),
       ],
@@ -78,12 +82,14 @@ class BloodPressureChartPainter extends CustomPainter {
   final bool showGridValues;
   final double spacingFactor;
   final bool isDarkMode;
+  final String? fontFamily;
 
   BloodPressureChartPainter(
     this.data, {
     this.showGridValues = false,
     this.spacingFactor = 0.85,
     this.isDarkMode = false,
+    this.fontFamily,
   });
 
   @override
@@ -92,7 +98,6 @@ class BloodPressureChartPainter extends CustomPainter {
 
     final double width = size.width;
     final double height = size.height;
-    final double padding = 0;
     final double chartHeight = height;
     final double chartWidth = width;
 
@@ -139,7 +144,11 @@ class BloodPressureChartPainter extends CustomPainter {
     final pressureRange = maxPressure - minPressure;
 
     // 텍스트 스타일 설정
-    final textStyle = TextStyle(color: Colors.grey, fontSize: 12);
+    final textStyle = TextStyle(
+      color: Colors.grey,
+      fontSize: 12,
+      fontFamily: fontFamily,
+    );
     final textPainter = TextPainter(textDirection: TextDirection.ltr);
 
     // 6개의 그리드 라인 그리기
@@ -175,6 +184,7 @@ class BloodPressureChartPainter extends CustomPainter {
     final textStyle = TextStyle(
       color: isDarkMode ? Colors.white : Colors.black,
       fontSize: 30,
+      fontFamily: fontFamily,
     );
     final textPainter = TextPainter(textDirection: TextDirection.ltr);
 
@@ -229,6 +239,7 @@ class BloodPressureChartPainter extends CustomPainter {
       color: Colors.white,
       fontSize: 30,
       fontWeight: FontWeight.bold,
+      fontFamily: fontFamily,
     );
     final textPainter = TextPainter(textDirection: TextDirection.ltr);
 
@@ -273,7 +284,7 @@ class BloodPressureChartPainter extends CustomPainter {
 
       // 둥근 직사각형 그리기 (점 아래에 배치)
       final rect = RRect.fromRectAndRadius(
-        Rect.fromCenter(center: Offset(x, y + 32), width: 72, height: 38),
+        Rect.fromCenter(center: Offset(x, y + 30), width: 72, height: 38),
         const Radius.circular(24),
       );
       canvas.drawRRect(rect, circlePaint);
@@ -356,6 +367,7 @@ class BloodPressureChartPainter extends CustomPainter {
     final textStyle = TextStyle(
       color: const Color(0xFF999999), // 항상 #999999 색상 사용
       fontSize: 30,
+      fontFamily: fontFamily,
     );
     final textPainter = TextPainter(textDirection: TextDirection.ltr);
 

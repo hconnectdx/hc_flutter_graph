@@ -53,6 +53,7 @@ class BloodPressureScreen extends StatelessWidget {
               data: data,
               isDarkMode: true,
               height: MediaQuery.of(context).size.height * 0.6,
+              fontFamily: 'SpoqaHanSansNeo',
             ),
           ],
         ),
