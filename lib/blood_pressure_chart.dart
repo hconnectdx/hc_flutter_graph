@@ -6,6 +6,8 @@ class BloodPressureChart extends StatelessWidget {
   final double height;
   final bool isDarkMode;
   final String? fontFamily;
+  final double leftPadding;
+  final double rightPadding;
 
   const BloodPressureChart({
     super.key,
@@ -14,6 +16,8 @@ class BloodPressureChart extends StatelessWidget {
     this.height = 300,
     this.isDarkMode = false,
     this.fontFamily,
+    this.leftPadding = 40.0,
+    this.rightPadding = 40.0,
   });
 
   @override
@@ -31,6 +35,8 @@ class BloodPressureChart extends StatelessWidget {
               spacingFactor: spacingFactor,
               isDarkMode: isDarkMode,
               fontFamily: fontFamily,
+              leftPadding: leftPadding,
+              rightPadding: rightPadding,
             ),
           ),
         ),
@@ -83,6 +89,8 @@ class BloodPressureChartPainter extends CustomPainter {
   final double spacingFactor;
   final bool isDarkMode;
   final String? fontFamily;
+  final double leftPadding;
+  final double rightPadding;
 
   BloodPressureChartPainter(
     this.data, {
@@ -90,6 +98,8 @@ class BloodPressureChartPainter extends CustomPainter {
     this.spacingFactor = 0.85,
     this.isDarkMode = false,
     this.fontFamily,
+    this.leftPadding = 40.0,
+    this.rightPadding = 40.0,
   });
 
   @override
@@ -99,16 +109,20 @@ class BloodPressureChartPainter extends CustomPainter {
     final double width = size.width;
     final double height = size.height;
     final double chartHeight = height;
-    final double chartWidth = width;
 
     // 배경 그리드 라인 그리기
     _drawGridLines(canvas, size, chartHeight);
 
-    // 혈압 값을 표시할 각 포인트 간의 간격 (간격을 spacingFactor로 조절)
-    final double pointSpacing = chartWidth / (data.length - 1) * spacingFactor;
-
-    // 차트의 중앙에 배치하기 위한 시작 X 좌표 계산
-    final startX = (width - (pointSpacing * (data.length - 1))) / 2;
+    // 리니어 차트와 동일하게 왼쪽 패딩부터 시작하도록 간격/시작점 계산
+    const int maxSlots = 5;
+    final double effectiveWidth = width - leftPadding - rightPadding;
+    final bool useFixedSlots = data.length <= maxSlots;
+    final double baseSpacing =
+        useFixedSlots
+            ? (effectiveWidth / (maxSlots - 1))
+            : (effectiveWidth / (data.length - 1));
+    final double pointSpacing = baseSpacing; // 리니어 차트와 동작 통일
+    final double startX = leftPadding;
 
     // 혈압 막대 그리기 (먼저 그리기)
     _drawPressureBars(canvas, pointSpacing, chartHeight, startX);
