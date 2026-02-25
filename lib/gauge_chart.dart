@@ -6,12 +6,6 @@ class GaugeChart extends StatefulWidget {
   /// 차트에 표시할 현재 값
   final double value;
 
-  /// 차트의 최소값
-  final double minValue;
-
-  /// 차트의 최대값
-  final double maxValue;
-
   /// 차트에 표시할 구간들
   final List<GaugeSegment> segments;
 
@@ -32,6 +26,9 @@ class GaugeChart extends StatefulWidget {
 
   /// 구간 라벨 텍스트 스타일
   final TextStyle? labelTextStyle;
+
+  /// 구간 의미 텍스트 스타일 (예: 정상, 과체중) - null이면 labelTextStyle 사용
+  final TextStyle? segmentLabelTextStyle;
 
   /// 중앙 라벨 텍스트 스타일
   final TextStyle? centerLabelTextStyle;
@@ -72,11 +69,12 @@ class GaugeChart extends StatefulWidget {
   /// 텍스트에 적용할 폰트 패밀리 (null이면 기본 시스템 폰트 사용)
   final String? fontFamily;
 
+  /// 게이지 하단에 표시할 라벨 값들 (null이면 segments 기반으로 자동 생성)
+  final List<double>? labelValues;
+
   const GaugeChart({
     Key? key,
     required this.value,
-    this.minValue = 0,
-    this.maxValue = 300,
     required this.segments,
     this.size = 300,
     this.pointerThickness = 4.5,
@@ -84,6 +82,7 @@ class GaugeChart extends StatefulWidget {
     this.thickness = 70,
     this.valueTextStyle,
     this.labelTextStyle,
+    this.segmentLabelTextStyle,
     this.centerLabelTextStyle,
     this.centerUnitTextStyle,
     this.centerLabel = "BMI",
@@ -97,6 +96,7 @@ class GaugeChart extends StatefulWidget {
     this.showControls = false,
     this.textYOffset = -90,
     this.fontFamily,
+    this.labelValues,
   }) : super(key: key);
 
   @override
@@ -175,9 +175,8 @@ class _GaugeChartState extends State<GaugeChart> {
             child: CustomPaint(
               painter: GaugeChartPainter(
                 value: widget.value,
-                minValue: widget.minValue,
-                maxValue: widget.maxValue,
                 segments: widget.segments,
+                labelValues: widget.labelValues,
                 pointerThickness: widget.pointerThickness,
                 pointerLength: widget.pointerLength,
                 thickness: widget.thickness,
@@ -189,6 +188,10 @@ class _GaugeChartState extends State<GaugeChart> {
                         ))
                     .copyWith(fontFamily: widget.fontFamily),
                 labelTextStyle: (widget.labelTextStyle ??
+                        const TextStyle(color: Colors.grey, fontSize: 14))
+                    .copyWith(fontFamily: widget.fontFamily),
+                segmentLabelTextStyle: (widget.segmentLabelTextStyle ??
+                        widget.labelTextStyle ??
                         const TextStyle(color: Colors.grey, fontSize: 14))
                     .copyWith(fontFamily: widget.fontFamily),
                 centerLabelTextStyle: (widget.centerLabelTextStyle ??
@@ -206,8 +209,7 @@ class _GaugeChartState extends State<GaugeChart> {
               ),
               foregroundPainter: PointerPainter(
                 value: widget.value,
-                minValue: widget.minValue,
-                maxValue: widget.maxValue,
+                segments: widget.segments,
                 pointerThickness: widget.pointerThickness,
                 pointerLength: widget.pointerLength,
                 thickness: widget.thickness,
@@ -280,14 +282,14 @@ class _GaugeChartState extends State<GaugeChart> {
 
 class GaugeChartPainter extends CustomPainter {
   final double value;
-  final double minValue;
-  final double maxValue;
   final List<GaugeSegment> segments;
+  final List<double>? labelValues;
   final double pointerThickness;
   final double pointerLength;
   final double thickness;
   final TextStyle valueTextStyle;
   final TextStyle labelTextStyle;
+  final TextStyle segmentLabelTextStyle;
   final TextStyle centerLabelTextStyle;
   final TextStyle centerUnitTextStyle;
   final String centerLabel;
@@ -299,14 +301,14 @@ class GaugeChartPainter extends CustomPainter {
 
   GaugeChartPainter({
     required this.value,
-    required this.minValue,
-    required this.maxValue,
     required this.segments,
+    this.labelValues,
     required this.pointerThickness,
     required this.pointerLength,
     required this.thickness,
     required this.valueTextStyle,
     required this.labelTextStyle,
+    required this.segmentLabelTextStyle,
     required this.centerLabelTextStyle,
     required this.centerUnitTextStyle,
     required this.centerLabel,
@@ -322,17 +324,23 @@ class GaugeChartPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height - 50);
     final radius = min(size.width, size.height * 2) / 2 - thickness / 2;
 
-    // 텍스트 그리기 (레이블)
+    // 텍스트 그리기 (숫자 라벨)
     _drawLabels(canvas, center, radius);
 
     // 게이지 그리기
     _drawGauge(canvas, center, radius);
+
+    // 구간 의미 텍스트 그리기 (예: 정상, 과체중)
+    _drawSegmentLabels(canvas, center, radius);
 
     // 중앙 텍스트 그리기
     if (showValue) {
       _drawCenterText(canvas, center);
     }
   }
+
+  double get _minValue => segments.first.startValue;
+  double get _maxValue => segments.last.endValue;
 
   void _drawGauge(Canvas canvas, Offset center, double radius) {
     // 게이지 배경
@@ -344,7 +352,7 @@ class GaugeChartPainter extends CustomPainter {
           ..strokeCap = StrokeCap.round;
 
     // 구간별 색상 그리기
-    final double totalRange = maxValue - minValue;
+    final double totalRange = _maxValue - _minValue;
     double startAngle = pi;
 
     for (final segment in segments) {
@@ -440,42 +448,32 @@ class GaugeChartPainter extends CustomPainter {
   }
 
   void _drawLabels(Canvas canvas, Offset center, double radius) {
-    // 주요 값들 라벨 그리기 (최소값, 최대값, 중간 값들)
-    final List<double> labelValues = [
-      minValue,
-      50,
-      100,
-      150,
-      200,
-      250,
-      maxValue,
-    ];
+    // 외부에서 전달받은 labelValues 사용, 없으면 segments 기반으로 자동 생성
+    final List<double> values = labelValues ??
+        List.generate(
+          7,
+          (i) => _minValue + (_maxValue - _minValue) * i / 6,
+        );
 
-    for (final labelValue in labelValues) {
-      final valueRatio = (labelValue - minValue) / (maxValue - minValue);
+    for (final labelValue in values) {
+      final valueRatio = (labelValue - _minValue) / (_maxValue - _minValue);
       final valueAngle = pi + (valueRatio * pi);
 
       // 끝 부분 라벨 위치 조정
       double xOffset = 0;
       double yOffset = 0;
 
-      if (labelValue == minValue) {
-        // 왼쪽 끝(0) 라벨 오른쪽으로 살짝 이동
+      if (labelValue == _minValue) {
+        // 왼쪽 끝 라벨 오른쪽으로 살짝 이동
         xOffset = 10;
         yOffset = -12;
-      } else if (labelValue == maxValue) {
-        // 오른쪽 끝(300) 라벨 왼쪽으로 살짝 이동하고 더 떨어뜨림
-        xOffset = 10;
+      } else if (labelValue == _maxValue) {
+        // 오른쪽 끝 라벨 왼쪽으로 살짝 이동
+        xOffset = 5;
         yOffset = -12;
-        // 차트에서 더 떨어뜨림
-        xOffset -= 5;
-      } else if (labelValue == 150) {
-        // 중앙(150) 라벨 아래로 살짝 이동
+      } else if (labelValue == values[values.length ~/ 2]) {
+        // 중앙 라벨 아래로 살짝 이동
         yOffset = 8;
-      } else if (labelValue == 250) {
-        // 중앙(150) 라벨 아래로 살짝 이동
-        xOffset = 8;
-        yOffset = 0;
       }
 
       final labelOffset = Offset(
@@ -483,10 +481,55 @@ class GaugeChartPainter extends CustomPainter {
         center.dy + (radius + thickness / 2 + 30) * sin(valueAngle) + yOffset,
       );
 
+      // 소수점 이하 모두 표시 (23.0 → "23.0", 18.4 → "18.4")
+      final labelText = labelValue == labelValue.truncateToDouble()
+          ? labelValue.toStringAsFixed(1)
+          : labelValue.toString();
+
       final textPainter = TextPainter(
         text: TextSpan(
-          text: labelValue.round().toString(),
-          style: labelTextStyle.copyWith(fontSize: 30),
+          text: labelText,
+          style: labelTextStyle.copyWith(fontSize: 18),
+        ),
+        textDirection: TextDirection.ltr,
+        textAlign: TextAlign.center,
+      );
+
+      textPainter.layout();
+      textPainter.paint(
+        canvas,
+        Offset(
+          labelOffset.dx - textPainter.width / 2,
+          labelOffset.dy - textPainter.height / 2,
+        ),
+      );
+    }
+  }
+
+  void _drawSegmentLabels(Canvas canvas, Offset center, double radius) {
+    final double totalRange = _maxValue - _minValue;
+
+    for (final segment in segments) {
+      final segmentLabel = segment.label;
+      if (segmentLabel == null || segmentLabel.isEmpty) continue;
+
+      // 구간 중앙 값으로 각도 계산
+      final centerValue =
+          segment.startValue + (segment.endValue - segment.startValue) / 2;
+      final valueRatio = (centerValue - _minValue) / totalRange;
+      final valueAngle = pi + (valueRatio * pi);
+
+      // 구간 텍스트를 숫자 라벨 바깥쪽에 배치하여 그래프와 겹치지 않게
+      final labelDistance = radius + thickness / 2 + 55;
+      final labelOffset = Offset(
+        center.dx + labelDistance * cos(valueAngle),
+        center.dy + labelDistance * sin(valueAngle),
+      );
+
+      final textPainter = TextPainter(
+        text: TextSpan(
+          text: segmentLabel,
+          style: segmentLabelTextStyle.copyWith(fontSize: 24),
         ),
         textDirection: TextDirection.ltr,
         textAlign: TextAlign.center,
@@ -506,9 +549,9 @@ class GaugeChartPainter extends CustomPainter {
   @override
   bool shouldRepaint(GaugeChartPainter oldDelegate) {
     return oldDelegate.value != value ||
-        oldDelegate.minValue != minValue ||
-        oldDelegate.maxValue != maxValue ||
         oldDelegate.segments != segments ||
+        oldDelegate.labelValues != labelValues ||
+        oldDelegate.segmentLabelTextStyle != segmentLabelTextStyle ||
         oldDelegate.pointerThickness != pointerThickness ||
         oldDelegate.pointerLength != pointerLength ||
         oldDelegate.thickness != thickness ||
@@ -523,16 +566,14 @@ class GaugeChartPainter extends CustomPainter {
 // 포인터를 위한 별도의 페인터 클래스 생성 (항상 게이지 위에 그려짐)
 class PointerPainter extends CustomPainter {
   final double value;
-  final double minValue;
-  final double maxValue;
+  final List<GaugeSegment> segments;
   final double pointerThickness;
   final double pointerLength;
   final double thickness;
 
   PointerPainter({
     required this.value,
-    required this.minValue,
-    required this.maxValue,
+    required this.segments,
     required this.pointerThickness,
     required this.pointerLength,
     required this.thickness,
@@ -544,6 +585,8 @@ class PointerPainter extends CustomPainter {
     final radius = min(size.width, size.height * 2) / 2 - thickness / 2;
 
     // 값의 각도 계산
+    final minValue = segments.first.startValue;
+    final maxValue = segments.last.endValue;
     final valueRatio = (value - minValue) / (maxValue - minValue);
     final valueAngle = pi + (valueRatio * pi);
 
@@ -577,8 +620,7 @@ class PointerPainter extends CustomPainter {
   @override
   bool shouldRepaint(PointerPainter oldDelegate) {
     return oldDelegate.value != value ||
-        oldDelegate.minValue != minValue ||
-        oldDelegate.maxValue != maxValue ||
+        oldDelegate.segments != segments ||
         oldDelegate.pointerThickness != pointerThickness ||
         oldDelegate.pointerLength != pointerLength ||
         oldDelegate.thickness != thickness;
