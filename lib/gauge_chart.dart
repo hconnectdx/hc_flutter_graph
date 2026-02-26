@@ -489,7 +489,7 @@ class GaugeChartPainter extends CustomPainter {
       final textPainter = TextPainter(
         text: TextSpan(
           text: labelText,
-          style: labelTextStyle.copyWith(fontSize: 18),
+          style: labelTextStyle,
         ),
         textDirection: TextDirection.ltr,
         textAlign: TextAlign.center,
@@ -529,7 +529,7 @@ class GaugeChartPainter extends CustomPainter {
       final textPainter = TextPainter(
         text: TextSpan(
           text: segmentLabel,
-          style: segmentLabelTextStyle.copyWith(fontSize: 24),
+          style: segmentLabelTextStyle,
         ),
         textDirection: TextDirection.ltr,
         textAlign: TextAlign.center,
