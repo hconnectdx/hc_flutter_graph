@@ -397,13 +397,13 @@ class BloodPressureChartPainter extends CustomPainter {
   Color _getColorForPressureType(PressureType type) {
     switch (type) {
       case PressureType.low:
-        return Colors.blue;
+        return Color(0xFF1E92DF);
       case PressureType.normal:
-        return Colors.green;
+        return Color(0xFF62BA0B);
       case PressureType.warning:
-        return Colors.orange;
+        return Color(0xFFA5D610);
       case PressureType.high:
-        return Colors.red;
+        return Color(0xFFEF193D);
     }
   }
 
@@ -435,13 +435,13 @@ class BloodPressureData {
   }
 
   PressureType _calculatePressureType(int systolic, int diastolic) {
-    if (systolic < 90 && diastolic > 60) {
+    if (systolic < 90 || diastolic < 60) {
       return PressureType.low;
-    } else if (systolic < 120 && diastolic > 80) {
+    } else if (systolic >= 91 && systolic <= 120 && diastolic >= 60 && diastolic <= 79) {
       return PressureType.normal;
-    } else if (systolic >= 120 && systolic < 140 && diastolic > 80) {
+    } else if (systolic > 130 && systolic < 139 || systolic > 120 && systolic <= 129 && diastolic >= 60 && diastolic < 79 || diastolic > 80 && diastolic <= 89) {
       return PressureType.warning;
-    } else if (systolic >= 140 && diastolic > 90) {
+    } else if (systolic > 160 || systolic >= 140 && diastolic >= 90 || diastolic >= 100) {
       return PressureType.high;
     } else {
       // 기본값으로 정상 반환
@@ -451,8 +451,8 @@ class BloodPressureData {
 }
 
 enum PressureType {
-  low, // 저혈압: 수축기 90 미만, 이완기 60초과
-  normal, // 정상: 수축기 120 미만, 이완기 80초과
-  warning, // 주의혈압: 수축기 120~139, 이완기 80초과
-  high, // 고혈압: 수축기 140 초과, 이완기 90초과
+  low, // 저혈압
+  normal, // 정상
+  warning, // 주의혈압
+  high, // 고혈압
 }
