@@ -50,10 +50,10 @@ class BloodPressureChart extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        _legendItem(Colors.blue, "저혈압"),
-        _legendItem(Colors.green, "정상"),
-        _legendItem(Colors.orange, "주의혈압"),
-        _legendItem(Colors.red, "고혈압"),
+        _legendItem(Color(0xFF1E92DF), "저혈압"),
+        _legendItem(Color(0xFF62BA0B), "정상"),
+        _legendItem(Color(0xFFFFA600), "주의혈압"),
+        _legendItem(Color(0xFFEF193D), "고혈압"),
         _legendItem(
           isDarkMode ? const Color(0xFF4A4F5A) : Colors.black,
           "맥박(bpm)",
@@ -401,7 +401,7 @@ class BloodPressureChartPainter extends CustomPainter {
       case PressureType.normal:
         return Color(0xFF62BA0B);
       case PressureType.warning:
-        return Color(0xFFA5D610);
+        return Color(0xFFFFA600);
       case PressureType.high:
         return Color(0xFFEF193D);
     }
