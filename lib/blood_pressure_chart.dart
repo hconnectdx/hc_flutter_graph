@@ -435,18 +435,26 @@ class BloodPressureData {
   }
 
   PressureType _calculatePressureType(int systolic, int diastolic) {
+    // bp_table.md: 저혈압 → 정상 → (고혈압이 주의와 겹칠 때 고혈압 우선) → 주의 → 그 외
     if (systolic < 90 || diastolic < 60) {
       return PressureType.low;
-    } else if (systolic >= 91 && systolic <= 120 && diastolic >= 60 && diastolic <= 79) {
-      return PressureType.normal;
-    } else if (systolic > 130 && systolic < 139 || systolic > 120 && systolic <= 129 && diastolic >= 60 && diastolic < 79 || diastolic > 80 && diastolic <= 89) {
-      return PressureType.warning;
-    } else if (systolic > 160 || systolic >= 140 && diastolic >= 90 || diastolic >= 100) {
+    }
+    if (systolic >= 160 ||
+        diastolic >= 100 ||
+        (systolic >= 140 && systolic <= 159) ||
+        (diastolic >= 90 && diastolic <= 99)) {
       return PressureType.high;
-    } else {
-      // 기본값으로 정상 반환
+    }
+    // 정상(91~120 & 60~79)과 주의(120~129 & 60~79)가 수축기 120에서 겹침 → 정상 우선
+    if (systolic >= 91 && systolic <= 120 && diastolic >= 60 && diastolic <= 79) {
       return PressureType.normal;
     }
+    if ((systolic >= 121 && systolic <= 129 && diastolic >= 60 && diastolic <= 79) ||
+        (systolic >= 130 && systolic <= 139) ||
+        (diastolic >= 80 && diastolic <= 89)) {
+      return PressureType.warning;
+    }
+    return PressureType.normal;
   }
 }
 
