@@ -434,26 +434,34 @@ class BloodPressureData {
     this.pressureType = _calculatePressureType(systolic, diastolic);
   }
 
+  /// 혈압 유형 계산 (저→정→주의→고).
   PressureType _calculatePressureType(int systolic, int diastolic) {
-    // bp_table.md: 저혈압 → 정상 → (고혈압이 주의와 겹칠 때 고혈압 우선) → 주의 → 그 외
-    if (systolic < 90 || diastolic < 60) {
+    bool lowBp(int sys, int dia) => sys < 90 || dia < 60;
+    bool normalBp(int sys, int dia) =>
+        (sys >= 91 && sys <= 120) && (dia >= 60 && dia < 80);
+    bool cautionBp(int sys, int dia) =>
+        (sys >= 120 && sys <= 129 && dia >= 60 && dia < 80) ||
+        (sys >= 130 && sys <= 139) ||
+        (dia >= 80 && dia <= 89);
+    bool highBp(int sys, int dia) =>
+        (sys >= 140 && sys <= 159) ||
+        (dia >= 90 && dia <= 99) ||
+        sys >= 160 ||
+        dia >= 100;
+
+    if (lowBp(systolic, diastolic)) {
       return PressureType.low;
     }
-    if (systolic >= 160 ||
-        diastolic >= 100 ||
-        (systolic >= 140 && systolic <= 159) ||
-        (diastolic >= 90 && diastolic <= 99)) {
-      return PressureType.high;
-    }
-    // 정상(91~120 & 60~79)과 주의(120~129 & 60~79)가 수축기 120에서 겹침 → 정상 우선
-    if (systolic >= 91 && systolic <= 120 && diastolic >= 60 && diastolic <= 79) {
+    if (normalBp(systolic, diastolic)) {
       return PressureType.normal;
     }
-    if ((systolic >= 121 && systolic <= 129 && diastolic >= 60 && diastolic <= 79) ||
-        (systolic >= 130 && systolic <= 139) ||
-        (diastolic >= 80 && diastolic <= 89)) {
+    if (cautionBp(systolic, diastolic)) {
       return PressureType.warning;
     }
+    if (highBp(systolic, diastolic)) {
+      return PressureType.high;
+    }
+    // 웹은 해당 없으면 null; 차트는 비구분 시 정상색
     return PressureType.normal;
   }
 }
